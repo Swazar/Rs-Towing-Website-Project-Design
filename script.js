@@ -38,26 +38,7 @@ function closeMob() {
 }
 
 // ── VIDEO ──
-(function () {
-  const placeholder = document.getElementById('videoPlaceholder');
-  const playBtn     = document.getElementById('videoPlayBtn');
-
-  // Build the video element immediately so it's ready to play
-  const video = document.createElement('video');
-  video.src              = 'inages/0319.mp4';
-  video.controls         = true;
-  video.autoplay         = false;
-  video.playsInline      = true;
-  video.style.cssText    = 'width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;';
-
-  // When the play button is clicked, swap placeholder content with the video and start playing
-  playBtn.addEventListener('click', function () {
-    placeholder.innerHTML = '';       // clear overlay / poster content
-    placeholder.appendChild(video);
-    playBtn.style.display = 'none';   // hide the play button
-    video.play();
-  });
-})();
+// Video is embedded directly in the HTML at inages/0319_1_.mp4
 
 // ── FAQ ACCORDION ──
 const faqs = [
