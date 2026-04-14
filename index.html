@@ -180,10 +180,12 @@
     <div>
       <p class="sec-eyebrow sec-eyebrow--light" style="margin-bottom:.75rem">See Us In Action</p>
       <div class="video-frame" id="videoFrame">
-        <video id="myVideo" controls style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">
-          <source src="inages/0319.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
+        <div class="video-placeholder" id="videoPlaceholder">
+          <button class="video-play-btn" id="videoPlayBtn" aria-label="Play video">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+          <p>Add your video — replace the src in the code</p>
+        </div>
       </div>
     </div>
   </div>
@@ -280,7 +282,7 @@
       </div>
       <div class="ci">
         <div class="ci-ic"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-        <div><div class="ci-lbl">Email</div><a href="/cdn-cgi/l/email-protection#94e6fbfae0fcf1f3fba1aca2d4f3f9f5fdf8baf7fbf9" class="ci-val"><span class="__cf_email__" data-cfemail="c0b2afaeb4a8a5a7aff5f8f680a7ada1a9aceea3afad">[email&#160;protected]</span></a></div>
+        <div><div class="ci-lbl">Email</div><a href="mailto:rsonthego@gmail.com" class="ci-val">rsonthego@gmail.com</a></div>
       </div>
       <div class="ci">
         <div class="ci-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
@@ -355,4 +357,11 @@
     </div>
   </div>
   <div class="footer-btm">
-    <span>© 2025 RS on the Go LLC · All rights reserved</sp
+    <span>© 2025 RS on the Go LLC · All rights reserved</span>
+    <span>North Carolina · DOT Licensed · Fully Insured</span>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
