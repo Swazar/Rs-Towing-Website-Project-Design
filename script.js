@@ -44,7 +44,7 @@ function closeMob() {
 
   // Build the video element immediately so it's ready to play
   const video = document.createElement('video');
-  video.src              = 'inages/0319_1_.mp4';
+  video.src              = 'inages/0319.mp4';
   video.controls         = true;
   video.autoplay         = false;
   video.playsInline      = true;
