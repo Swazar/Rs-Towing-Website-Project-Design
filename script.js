@@ -1,6 +1,4 @@
-/* ============================================================
-   RS on the Go LLC — script.js
-   ============================================================ */
+
 
 // ── IMAGE PATHS ──
 // Replace these with your actual image URLs or file paths
@@ -38,13 +36,8 @@ function closeMob() {
   mob.classList.remove('open');
 }
 
-// ── VIDEO PLACEHOLDER ──
-document.getElementById('videoPlayBtn').addEventListener('click', function () {
-  document.getElementById('videoPlaceholder').innerHTML = `
-    <p style="color:rgba(255,255,255,.5);font-size:.9rem;padding:2rem;text-align:center">
-      🎬 Replace <code style="color:#ff8a8a">&lt;video src="..."&gt;</code> in the HTML to activate your video here.
-    </p>`;
-});
+// ── VIDEO ──
+// Video is embedded directly in the HTML as inages/0319.mp4
 
 // ── FAQ ACCORDION ──
 const faqs = [
