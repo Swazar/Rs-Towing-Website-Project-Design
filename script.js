@@ -3,7 +3,6 @@
    ============================================================ */
 
 // ── IMAGE PATHS ──
-// Replace these with your actual image URLs or file paths
 const IMG_HERO  = 'inages/7136d55f-f74e-49c7-9101-61a9be6854e8.jpg';
 const IMG_WORK1 = 'inages/image2.jpg';
 const IMG_WORK2 = 'inages/image.jpg';
@@ -38,13 +37,27 @@ function closeMob() {
   mob.classList.remove('open');
 }
 
-// ── VIDEO PLACEHOLDER ──
-document.getElementById('videoPlayBtn').addEventListener('click', function () {
-  document.getElementById('videoPlaceholder').innerHTML = `
-    <p style="color:rgba(255,255,255,.5);font-size:.9rem;padding:2rem;text-align:center">
-      🎬 Replace <code style="color:#ff8a8a">&lt;video src="..."&gt;</code> in the HTML to activate your video here.
-    </p>`;
-});
+// ── VIDEO ──
+(function () {
+  const placeholder = document.getElementById('videoPlaceholder');
+  const playBtn     = document.getElementById('videoPlayBtn');
+
+  // Build the video element immediately so it's ready to play
+  const video = document.createElement('video');
+  video.src              = 'inages/0319_1_.mp4';
+  video.controls         = true;
+  video.autoplay         = false;
+  video.playsInline      = true;
+  video.style.cssText    = 'width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;';
+
+  // When the play button is clicked, swap placeholder content with the video and start playing
+  playBtn.addEventListener('click', function () {
+    placeholder.innerHTML = '';       // clear overlay / poster content
+    placeholder.appendChild(video);
+    playBtn.style.display = 'none';   // hide the play button
+    video.play();
+  });
+})();
 
 // ── FAQ ACCORDION ──
 const faqs = [
@@ -80,24 +93,16 @@ const faqs = [
 
 const faqList = document.getElementById('faqList');
 
-/**
- * Open a single FAQ item with pixel-accurate height animation.
- * Uses the inner element's scrollHeight so the transition is smooth
- * regardless of content length — no more max-height hack artifacts.
- */
 function openFaq(item) {
   const panel = item.querySelector('.faq-a');
   const inner = item.querySelector('.faq-a-inner');
   item.classList.add('open');
-  // Set explicit height to scrollHeight so CSS transition fires
   panel.style.height = inner.scrollHeight + 'px';
 }
 
 function closeFaq(item) {
   const panel = item.querySelector('.faq-a');
-  // Snap from auto to explicit px before collapsing
   panel.style.height = panel.scrollHeight + 'px';
-  // Force reflow so the browser registers the starting value
   panel.getBoundingClientRect();
   panel.style.height = '0';
   item.classList.remove('open');
@@ -111,9 +116,7 @@ faqs.forEach(function (f) {
       ${f.q}
       <div class="faq-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24">
-          <!-- horizontal bar -->
           <line class="icon-h" x1="5" y1="12" x2="19" y2="12"/>
-          <!-- vertical bar -->
           <line class="icon-v" x1="12" y1="5" x2="12" y2="19"/>
         </svg>
       </div>
@@ -130,7 +133,6 @@ faqs.forEach(function (f) {
   btn.addEventListener('click', function () {
     const isOpen = item.classList.contains('open');
 
-    // Close all other open items
     document.querySelectorAll('.faq-item.open').forEach(function (el) {
       if (el !== item) {
         closeFaq(el);
@@ -157,4 +159,3 @@ document.getElementById('fsbtn').addEventListener('click', function (e) {
   this.style.background = '#16a34a';
   this.disabled = true;
 });
-
