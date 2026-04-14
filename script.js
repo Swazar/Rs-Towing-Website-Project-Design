@@ -1,12 +1,10 @@
-
-
 // ── IMAGE PATHS ──
 // Replace these with your actual image URLs or file paths
 const IMG_HERO  = 'inages/7136d55f-f74e-49c7-9101-61a9be6854e8.jpg';
 const IMG_WORK1 = 'inages/image2.jpg';
 const IMG_WORK2 = 'inages/image.jpg';
-const IMG_WORK3 = 'inages/Mar 30, 2026, 05_35_20 PM.png';
-const IMG_WORK4 = 'inages/Imag55.png';
+const IMG_WORK3 = 'inages/Mar%2030%2C%202026%2C%2005_35_20%20PM.png';
+const IMG_WORK4 = 'inages/imag44444.png';
 
 // ── SET IMAGES ──
 if (IMG_HERO) {
