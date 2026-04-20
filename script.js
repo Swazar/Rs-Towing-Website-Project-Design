@@ -37,9 +37,6 @@ function closeMob() {
   mob.classList.remove('open');
 }
 
-// ── VIDEO ──
-// Video is embedded directly in the HTML at inages/0319_1_.mp4
-
 // ── FAQ ACCORDION ──
 const faqs = [
   {
@@ -133,10 +130,40 @@ faqs.forEach(function (f) {
   faqList.appendChild(item);
 });
 
-// ── CONTACT FORM SUBMIT ──
-document.getElementById('fsbtn').addEventListener('click', function (e) {
+// ── CONTACT FORM SUBMIT (Formspree) ──
+document.getElementById('contactForm').addEventListener('submit', async function (e) {
   e.preventDefault();
-  this.innerHTML = "✓ Message Sent — We'll be in touch shortly!";
-  this.style.background = '#16a34a';
-  this.disabled = true;
+
+  const btn = document.getElementById('fsbtn');
+  const originalHTML = btn.innerHTML;
+
+  btn.innerHTML = 'Sending…';
+  btn.disabled = true;
+
+  const formData = new FormData(this);
+
+  try {
+    const response = await fetch(this.action, {
+      method: 'POST',
+      body: formData,
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.ok) {
+      btn.innerHTML = "✓ Message Sent — We'll be in touch shortly!";
+      btn.style.background = '#16a34a';
+      this.reset();
+    } else {
+      throw new Error('Server error');
+    }
+  } catch (err) {
+    btn.innerHTML = '✗ Something went wrong. Please call us directly.';
+    btn.style.background = '#dc2626';
+    btn.disabled = false;
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.style.background = '';
+      btn.disabled = false;
+    }, 4000);
+  }
 });
