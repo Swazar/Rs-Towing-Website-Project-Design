@@ -75,6 +75,7 @@ h2 { font-size: clamp(1.95rem, 3.5vw, 3rem); }
 .review-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-top: 27px; }
 .review-card { padding: clamp(18px, 3vw, 28px); border: 1px solid var(--line); border-radius: 6px; background: var(--paper); overflow-wrap: anywhere; }
 .review-card blockquote { margin: 10px 0 15px; }
+.review-toggle { padding: 0; margin: 0 0 14px; border: 0; background: transparent; text-decoration: underline; text-underline-offset: .22em; cursor: pointer; }
 .review-card figcaption { color: var(--muted); font-size: .89rem; font-weight: 750; }
 .review-card time { display: block; margin-top: 3px; font-size: .8rem; font-weight: 500; }
 .review-score { color: var(--brand); font-size: 1.12rem; letter-spacing: .09em; }
@@ -128,6 +129,8 @@ h2 { font-size: clamp(1.95rem, 3.5vw, 3rem); }
 .field label span { color: var(--muted); font-weight: 500; }
 .field input, .field select, .field textarea { width: 100%; min-width: 0; min-height: 46px; padding: 9px 10px; border: 1px solid #87848b; border-radius: 4px; background: var(--white); color: var(--ink); }
 .field textarea { resize: vertical; }
+.field textarea#review { min-height: 120px; max-height: 220px; overflow-y: auto; }
+.review-count { text-align: end; }
 .field-hint { color: var(--muted); font-size: .83rem; }
 .checkbox { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); font-size: .87rem; }
 .checkbox input { flex-shrink: 0; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--ink); }

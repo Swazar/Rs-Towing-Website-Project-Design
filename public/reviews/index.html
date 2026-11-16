@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400..800&amp;display=swap">
   <link rel="stylesheet" href="/assets/site.css">
+  <script type="module" src="/assets/review-form.js"></script>
 </head>
 <body class="inner-page">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -45,7 +46,11 @@
             <label><input type="radio" name="rating" value="5"><span aria-hidden="true">★</span><span class="sr-only">5 out of 5 stars</span></label>
           </div>
         </fieldset>
-        <div class="field"><label for="review">Your feedback</label><textarea id="review" name="review" rows="5" maxlength="2000" required></textarea></div>
+        <div class="field">
+          <label for="review">Your feedback</label>
+          <textarea id="review" name="review" rows="4" maxlength="800" aria-describedby="review-count" required></textarea>
+          <p class="field-hint review-count" id="review-count">Up to 800 characters</p>
+        </div>
         <label class="checkbox"><input type="checkbox" name="publish-permission" value="yes"> You may share my feedback and first name on the website.</label>
         <button class="button" type="submit">Send review</button>
       </form>

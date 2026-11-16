@@ -1,5 +1,6 @@
 import { addRoutePreview } from './route-map.js';
 import { addLocationSuggestions } from './us-locations.js';
+import { enableReviewCounter } from './review-form.js';
 
 const navigation = document.querySelector('#site-nav');
 const menuButton = document.querySelector('.menu-toggle');
@@ -176,6 +177,36 @@ function reviewDate(value) {
   return Number.isFinite(date.valueOf()) && date.toISOString().slice(0, 10) === value ? value : '';
 }
 
+const reviewPreviewLength = 220;
+
+function showReviewQuote(card, text, index) {
+  const quote = card.querySelector('blockquote');
+  const characters = Array.from(text);
+  if (characters.length <= reviewPreviewLength) {
+    quote.textContent = text;
+    return;
+  }
+
+  const start = characters.slice(0, reviewPreviewLength).join('');
+  const lastSpace = start.lastIndexOf(' ');
+  const excerpt = `${lastSpace > reviewPreviewLength * .8 ? start.slice(0, lastSpace) : start}…`;
+  quote.id = `review-quote-${index}`;
+  quote.textContent = excerpt;
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'text-link review-toggle';
+  toggle.textContent = 'Read full review';
+  toggle.setAttribute('aria-controls', quote.id);
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'false';
+    quote.textContent = expanded ? text : excerpt;
+    toggle.textContent = expanded ? 'Show less' : 'Read full review';
+    toggle.setAttribute('aria-expanded', expanded);
+  });
+  quote.after(toggle);
+}
+
 async function showApprovedReviews() {
   const list = document.querySelector('[data-review-list]');
   const template = document.querySelector('#review-card');
@@ -201,7 +232,7 @@ async function showApprovedReviews() {
       ratingText.className = 'sr-only';
       ratingText.textContent = `${entry.rating} out of 5 stars`;
       score.append(stars, ratingText);
-      card.querySelector('blockquote').textContent = entry.quote;
+      showReviewQuote(card, entry.quote.trim(), index);
       card.querySelector('.review-author').textContent = entry.name;
       const date = reviewDate(entry.date);
       if (date) {
@@ -233,7 +264,9 @@ function enhanceReviewDialog() {
       const page = new DOMParser().parseFromString(await response.text(), 'text/html');
       const form = page.querySelector('form[name="customer-review"]');
       if (!form) throw new Error('Review form unavailable');
-      slot.replaceChildren(document.importNode(form, true));
+      const imported = document.importNode(form, true);
+      slot.replaceChildren(imported);
+      enableReviewCounter(imported);
     } catch {
       const fallback = document.createElement('a');
       fallback.className = 'text-link';
