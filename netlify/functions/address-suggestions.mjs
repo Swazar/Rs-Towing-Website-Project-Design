@@ -16,7 +16,10 @@ export default async function addressSuggestions(request) {
   }
 
   const apiKey = process.env.GEOAPIFY_ROUTING_KEY?.trim();
-  if (!apiKey) return Response.json([], { status: 503, headers });
+  if (!apiKey) {
+    console.error('Geoapify key is missing from this deploy context.');
+    return Response.json([], { status: 503, headers });
+  }
 
   const url = new URL('https://api.geoapify.com/v1/geocode/autocomplete');
   url.search = new URLSearchParams({
@@ -24,8 +27,11 @@ export default async function addressSuggestions(request) {
   });
 
   try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
-    if (!response.ok) return Response.json([], { status: 503, headers });
+    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!response.ok) {
+      console.error('Geoapify autocomplete returned HTTP', response.status);
+      return Response.json([], { status: 503, headers });
+    }
 
     const { results } = await response.json();
     const addresses = new Map();
@@ -37,7 +43,8 @@ export default async function addressSuggestions(request) {
       addresses.set(formatted, { label: formatted, point: [lat, lon] });
     }
     return Response.json([...addresses.values()], { headers });
-  } catch {
+  } catch (error) {
+    console.error('Geoapify autocomplete request failed:', error.name);
     return Response.json([], { status: 503, headers });
   }
 }
