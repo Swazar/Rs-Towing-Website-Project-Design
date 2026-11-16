@@ -155,7 +155,9 @@ export function addRoutePreview(form, locations, validateRoute) {
       const hours = Math.floor(route.minutes / 60);
       const minutes = route.minutes % 60;
       const duration = hours ? `${hours} hr ${minutes} min` : `${minutes} min`;
-      status.textContent = `About ${miles} driving miles · ${duration}. Actual tow mileage may vary.`;
+      const streetOnly = Object.keys(names).some(name => locations.isStreetOnly(form.elements[name]));
+      const note = streetOnly ? 'Estimate uses the selected street without a house number.' : 'Actual tow mileage may vary.';
+      status.textContent = `About ${miles} driving miles · ${duration}. ${note}`;
     } catch {
       if (pending !== request) return;
       try {

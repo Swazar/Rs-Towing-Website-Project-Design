@@ -157,6 +157,7 @@ h2 { font-size: clamp(1.95rem, 3.5vw, 3rem); }
 .route-map { height: clamp(205px, 34vh, 290px); border: 1px solid var(--line); border-radius: 6px; background: #eef2f6; }
 .map-link { justify-self: start; min-height: 44px; padding: 0; border: 0; background: transparent; color: #164b91; font-size: .88rem; font-weight: 750; text-decoration: underline; cursor: pointer; }
 .location-input { position: relative; }
+.address-hint:empty { display: none; }
 .location-suggestions { position: absolute; z-index: 5; inset: calc(100% + 4px) 0 auto; max-height: 200px; margin: 0; padding: 4px; overflow: auto; list-style: none; border: 1px solid var(--line); border-radius: 6px; background: var(--white); box-shadow: 0 8px 22px #15141824; }
 .location-suggestions li { display: flex; align-items: center; min-height: 40px; padding: 6px 9px; border-radius: 4px; font-size: .91rem; cursor: pointer; }
 .location-suggestions li:hover, .location-suggestions li[aria-selected="true"] { background: #eaf3ff; color: #164b91; }

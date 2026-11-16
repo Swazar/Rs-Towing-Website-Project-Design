@@ -1,6 +1,7 @@
 const normalize = value => value.normalize('NFD').replace(/\p{Diacritic}/gu, '')
   .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-const startsWithStreetNumber = value => /^\d+\w*[-\d]*\s+\S/.test(value);
+const looksLikeStreet = value => /^\d+[a-z]?(?:-\d+[a-z]?)?\s+\S/i.test(value) ||
+  /\S\s+(?:street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd|court|ct|way|place|pl|terrace|ter|circle|cir|parkway|pkwy|highway|hwy|trail|trl)\b/i.test(value);
 
 let catalog;
 let catalogRequest;
@@ -47,6 +48,7 @@ export function addLocationSuggestions(form) {
   for (const field of fields) {
     const list = document.querySelector(`#${field.id}-suggestions`);
     const count = document.querySelector(`#${field.id}-suggestion-status`);
+    const hint = document.querySelector(`#${field.id}-address-hint`);
     let matches = [];
     let active = -1;
     let request = 0;
@@ -91,13 +93,13 @@ export function addLocationSuggestions(form) {
         count.textContent = emptyMessage;
         return;
       }
-      list.replaceChildren(...matches.map(({ label }, index) => {
+      list.replaceChildren(...matches.map(({ label, streetOnly }, index) => {
         const option = document.createElement('li');
         option.id = `${list.id}-${index}`;
         option.dataset.index = index;
         option.setAttribute('role', 'option');
         option.setAttribute('aria-selected', 'false');
-        option.textContent = label;
+        option.textContent = streetOnly ? `${label} · Street only` : label;
         return option;
       }));
       list.hidden = false;
@@ -107,6 +109,7 @@ export function addLocationSuggestions(form) {
 
     async function suggestAddresses(query, current) {
       addressLookup = new AbortController();
+      hint.textContent = 'Looking up U.S. streets…';
       try {
         const response = await fetch('/.netlify/functions/address-suggestions', {
           method: 'POST',
@@ -116,27 +119,25 @@ export function addLocationSuggestions(form) {
         });
         if (!response.ok) throw new Error('Address suggestions unavailable');
         const places = await response.json();
-        if (request === current) showMatches(places, 'No matching street address. Try adding the city or ZIP code.');
+        if (request !== current) return;
+        const noMatch = 'No street match found. Try the street, city, and state separated by commas, or add a ZIP code.';
+        hint.textContent = places.length ? '' : noMatch;
+        showMatches(places, '');
       } catch {
-        if (request === current) count.textContent = 'Address suggestions are temporarily unavailable. Try a city and state.';
+        if (request === current) hint.textContent = 'Street lookup is temporarily unavailable. Try again or enter a city and state.';
       }
     }
 
-    field.addEventListener('input', async () => {
-      if (field.value !== devicePickup?.label && field === fields[0]) devicePickup = undefined;
-      if (field.value !== selectedAddresses.get(field)?.label) selectedAddresses.delete(field);
+    async function updateSuggestions() {
       closeList();
+      hint.textContent = selectedAddresses.get(field)?.streetOnly
+        ? 'Street selected. Add the exact house number in Load details if you know it.' : '';
       const text = field.value.trim();
       const query = normalize(text);
       if (query.length < 2 || field !== document.activeElement || selectedAddresses.has(field) ||
         field.value === devicePickup?.label || (field === fields[1] && query === 'unsure')) return;
 
       const current = request;
-      if (startsWithStreetNumber(text)) {
-        if (text.length >= 5) lookupTimer = setTimeout(() => suggestAddresses(text, current), 350);
-        return;
-      }
-
       try {
         const { entries, byName } = await loadCatalog();
         if (request !== current || byName.has(query)) return;
@@ -145,10 +146,25 @@ export function addLocationSuggestions(form) {
           if (place.key.startsWith(query)) places.push(place);
           if (places.length === 7) break;
         }
-        showMatches(places, 'No matching U.S. city. Try a nearby city.');
+        if (places.length || !looksLikeStreet(text)) {
+          showMatches(places, 'No matching U.S. city. Try a nearby city.');
+          return;
+        }
       } catch {
-        if (request === current) count.textContent = 'City suggestions are temporarily unavailable.';
+        if (request !== current) return;
+        if (!looksLikeStreet(text)) {
+          count.textContent = 'City suggestions are temporarily unavailable.';
+          return;
+        }
       }
+      if (text.length >= 5) lookupTimer = setTimeout(() => suggestAddresses(text, current), 350);
+    }
+
+    field.addEventListener('focus', updateSuggestions);
+    field.addEventListener('input', () => {
+      if (field.value !== devicePickup?.label && field === fields[0]) devicePickup = undefined;
+      if (field.value !== selectedAddresses.get(field)?.label) selectedAddresses.delete(field);
+      updateSuggestions();
     });
 
     field.addEventListener('keydown', event => {
@@ -176,7 +192,9 @@ export function addLocationSuggestions(form) {
       if (option) choose(Number(option.dataset.index));
     });
     field.addEventListener('blur', () => setTimeout(() => {
-      if (document.activeElement !== field) closeList();
+      if (document.activeElement === field) return;
+      closeList();
+      if (!selectedAddresses.has(field)) hint.textContent = '';
     }, 180));
   }
 
@@ -196,6 +214,9 @@ export function addLocationSuggestions(form) {
     },
     pointFor(field) {
       return find(field)?.point;
+    },
+    isStreetOnly(field) {
+      return Boolean(find(field)?.streetOnly);
     },
     async useDevicePickup(lat, lng, expectedValue) {
       boundaryRequest ??= readData('/assets/us-boundary.json').catch(error => {
