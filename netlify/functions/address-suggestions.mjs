@@ -16,11 +16,16 @@ async function findStreets(text, apiKey, signal) {
   const { results } = await response.json();
   const matches = new Map();
   for (const address of results ?? []) {
-    const { country_code, formatted, housenumber, street, result_type, lat, lon } = address;
+    const { country_code, formatted, housenumber, street, result_type, rank, lat, lon } = address;
     if (country_code !== 'us' || !street || (!housenumber && result_type !== 'street') ||
         typeof formatted !== 'string' || !formatted || formatted.length > 120 ||
         !Number.isFinite(lat) || !Number.isFinite(lon)) continue;
-    matches.set(formatted, { label: formatted, point: [lat, lon], streetOnly: !housenumber });
+    const streetOnly = !housenumber || result_type === 'street' ||
+      rank?.match_type === 'match_by_street' || rank?.confidence_building_level === 0;
+    const label = streetOnly
+      ? [street, [address.city, address.state_code, address.postcode].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+      : formatted;
+    matches.set(label, { label, point: [lat, lon], streetOnly });
   }
   return [...matches.values()].sort((a, b) => Number(a.streetOnly) - Number(b.streetOnly));
 }
