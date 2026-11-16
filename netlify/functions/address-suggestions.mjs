@@ -23,11 +23,11 @@ export default async function addressSuggestions(request) {
 
   const url = new URL('https://api.geoapify.com/v1/geocode/autocomplete');
   url.search = new URLSearchParams({
-    text: query, filter: 'countrycode:us', format: 'json', limit: '7', apiKey,
+    text: query, filter: 'countrycode:us', format: 'json', limit: '5', apiKey,
   });
 
   try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const response = await fetch(url, { signal: AbortSignal.timeout(9000) });
     if (!response.ok) {
       console.error('Geoapify autocomplete returned HTTP', response.status);
       return Response.json([], { status: 503, headers });
