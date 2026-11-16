@@ -1,7 +1,6 @@
 const leafletBase = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/';
 const names = { pickup: 'Pickup', dropoff: 'Drop-off' };
 const blue = '#1761bf';
-const metersPerMile = 1609.344;
 let leaflet;
 
 function loadLeaflet() {
@@ -31,8 +30,6 @@ function loadLeaflet() {
 export function addRoutePreview(form, locations, validateRoute) {
   const preview = form.querySelector('.route-preview');
   const panel = preview.querySelector('.map-panel');
-  const google = preview.querySelector('.google-route');
-  const googleFrame = google.querySelector('iframe');
   const mapButton = preview.querySelector('.route-check');
   const status = preview.querySelector('.route-status');
   const link = preview.querySelector('.route-link');
@@ -56,13 +53,11 @@ export function addRoutePreview(form, locations, validateRoute) {
   function drawRoute(fit = false) {
     if (!map) return;
     layers.clearLayers();
-    const pins = Object.fromEntries(Object.keys(names).map(name => [name, route?.pins?.[name] || pointFor(name)]));
+    const pins = Object.fromEntries(Object.keys(names).map(name => [name, pointFor(name)]));
     const points = Object.values(pins).filter(Boolean);
 
-    if (route?.path?.length > 1) {
+    if (route?.path?.length) {
       window.L.polyline(route.path, { color: blue, weight: 5 }).addTo(layers);
-    } else if (points.length === 2) {
-      window.L.polyline(points, { color: blue, weight: 4, dashArray: '6 7' }).addTo(layers);
     }
 
     for (const [name, pin] of Object.entries(pins)) {
@@ -90,23 +85,11 @@ export function addRoutePreview(form, locations, validateRoute) {
     drawRoute(fit);
   }
 
-  function straightMiles() {
-    const points = ['pickup', 'dropoff'].map(pointFor);
-    if (map && points.every(Boolean)) return (map.distance(points[0], points[1]) / metersPerMile).toFixed(1);
-  }
-
-  function hideGoogleMap() {
-    if (google.hidden) return;
-    google.hidden = true;
-    googleFrame.removeAttribute('src');
-    mapButton.textContent = 'Preview route';
-  }
-
   function clearRoute() {
     pending?.abort();
     pending = undefined;
     route = undefined;
-    hideGoogleMap();
+    panel.hidden = true;
     link.hidden = true;
     status.textContent = '';
     drawRoute();
@@ -137,7 +120,6 @@ export function addRoutePreview(form, locations, validateRoute) {
   });
 
   mapButton.addEventListener('click', async () => {
-    const backToCityMap = !google.hidden;
     clearRoute();
     const invalid = validateRoute();
     if (invalid) {
@@ -154,19 +136,6 @@ export function addRoutePreview(form, locations, validateRoute) {
     const request = new AbortController();
     pending = request;
 
-    if (backToCityMap) {
-      try {
-        await openMap(true, request.signal);
-        if (pending !== request) return;
-        status.textContent = `About ${straightMiles()} mi straight-line. Use Preview route for road mileage.`;
-      } catch {
-        if (pending === request) status.textContent = 'The inline map could not load.';
-      } finally {
-        if (pending === request) pending = undefined;
-      }
-      return;
-    }
-
     status.textContent = 'Looking up the driving route…';
 
     try {
@@ -179,17 +148,14 @@ export function addRoutePreview(form, locations, validateRoute) {
       if (!response.ok) throw new Error('Route unavailable');
       const result = await response.json();
       if (pending !== request) return;
-      if (result.googleEmbedUrl) {
-        panel.hidden = true;
-        mapButton.textContent = 'Show city map';
-        googleFrame.src = result.googleEmbedUrl;
-        google.hidden = false;
-        status.textContent = 'Google Maps shows estimated driving mileage and time. Actual tow mileage may vary.';
-        return;
-      }
       route = result;
-      status.textContent = `About ${route.miles.toLocaleString('en-US')} driving miles. Actual tow mileage may vary.`;
-      if (route.path?.length) await openMap(true, request.signal).catch(() => {});
+      await openMap(true, request.signal);
+      if (pending !== request) return;
+      const miles = route.miles.toLocaleString('en-US');
+      const hours = Math.floor(route.minutes / 60);
+      const minutes = route.minutes % 60;
+      const duration = hours ? `${hours} hr ${minutes} min` : `${minutes} min`;
+      status.textContent = `About ${miles} driving miles · ${duration}. Actual tow mileage may vary.`;
     } catch {
       if (pending !== request) return;
       try {
@@ -200,8 +166,7 @@ export function addRoutePreview(form, locations, validateRoute) {
       }
       if (pending !== request) return;
 
-      const miles = straightMiles();
-      status.textContent = `About ${miles} mi straight-line. Open Google Maps for driving distance.`;
+      status.textContent = 'Driving route unavailable. Open Google Maps for road mileage or continue with your quote.';
     } finally {
       if (pending === request) pending = undefined;
     }

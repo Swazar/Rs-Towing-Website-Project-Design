@@ -190,15 +190,13 @@
               <p class="field-hint" id="dropoff-hint">U.S. routes only. Start typing a city to see matches. If you don’t know the drop-off, enter “Unsure.”</p>
               <div class="route-preview" hidden>
                 <div class="map-actions">
-                  <button type="button" class="button button-outline route-check" aria-controls="quote-map-panel google-route-panel">Preview route</button>
+                  <button type="button" class="button button-outline route-check" aria-controls="quote-map-panel">Preview route</button>
                 </div>
                 <p class="field-hint route-status" role="status"></p>
                 <a class="text-link route-link" target="_blank" rel="noopener noreferrer" hidden>Open in Google Maps</a>
-                <div class="google-route" id="google-route-panel" hidden>
-                  <iframe title="Driving directions in Google Maps" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-                </div>
                 <div class="map-panel" id="quote-map-panel" hidden>
                   <div class="route-map" role="region" aria-label="Pickup and drop-off map"></div>
+                  <small class="field-hint">Routing by <a href="https://www.geoapify.com/">Geoapify</a></small>
                 </div>
               </div>
             </fieldset>

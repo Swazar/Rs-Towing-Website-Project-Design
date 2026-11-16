@@ -154,7 +154,6 @@ h2 { font-size: clamp(1.95rem, 3.5vw, 3rem); }
 .map-actions { display: flex; flex-wrap: wrap; gap: 6px 10px; }
 .map-actions .button { min-height: 44px; }
 .map-panel { display: grid; gap: 8px; margin-top: 12px; }
-.google-route iframe { display: block; width: 100%; min-width: 200px; height: clamp(245px, 43vh, 390px); margin-top: 5px; border: 1px solid var(--line); border-radius: 6px; }
 .route-map { height: clamp(205px, 34vh, 290px); border: 1px solid var(--line); border-radius: 6px; background: #eef2f6; }
 .map-link { justify-self: start; min-height: 44px; padding: 0; border: 0; background: transparent; color: #164b91; font-size: .88rem; font-weight: 750; text-decoration: underline; cursor: pointer; }
 .location-input { position: relative; }
