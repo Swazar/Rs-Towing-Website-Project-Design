@@ -127,7 +127,7 @@
           </details>
           <details name="site-faq">
             <summary>What information do you need for a quote?</summary>
-            <p>Send the pickup and drop-off cities, what needs to be moved, and your preferred timing. For equipment or freight, include the dimensions and weight if you know them.</p>
+            <p>Send the pickup and drop-off addresses or cities, what needs to be moved, and your preferred timing. For equipment or freight, include the dimensions and weight if you know them.</p>
           </details>
         </div>
       </div>
@@ -172,7 +172,7 @@
                 <div class="field">
                   <label for="pickup">Pickup location</label>
                   <div class="location-input">
-                    <input id="pickup" name="pickup" maxlength="120" autocomplete="off" required aria-describedby="dropoff-hint" data-required-message="Enter a U.S. city and state or use your current location.">
+                    <input id="pickup" name="pickup" maxlength="120" autocomplete="off" required aria-describedby="dropoff-hint" data-required-message="Enter a U.S. street address or city and state, or use your current location.">
                     <ul id="pickup-suggestions" class="location-suggestions" role="listbox" aria-label="Pickup suggestions" hidden></ul>
                     <span class="sr-only" id="pickup-suggestion-status" role="status"></span>
                   </div>
@@ -181,13 +181,13 @@
                 <div class="field">
                   <label for="dropoff">Drop-off location</label>
                   <div class="location-input">
-                    <input id="dropoff" name="dropoff" maxlength="120" autocomplete="off" required aria-describedby="dropoff-hint" data-required-message="Enter a U.S. city and state or type ‘Unsure’.">
+                    <input id="dropoff" name="dropoff" maxlength="120" autocomplete="off" required aria-describedby="dropoff-hint" data-required-message="Enter a U.S. street address or city and state, or type ‘Unsure’.">
                     <ul id="dropoff-suggestions" class="location-suggestions" role="listbox" aria-label="Drop-off suggestions" hidden></ul>
                     <span class="sr-only" id="dropoff-suggestion-status" role="status"></span>
                   </div>
                 </div>
               </div>
-              <p class="field-hint" id="dropoff-hint">U.S. routes only. Start typing a city to see matches. If you don’t know the drop-off, enter “Unsure.”</p>
+              <p class="field-hint" id="dropoff-hint">U.S. locations only. Start with a street number or city name, then choose a match. If you don’t know the drop-off, enter “Unsure.” Address suggestions by <a href="https://www.geoapify.com/">Geoapify</a>.</p>
               <div class="route-preview" hidden>
                 <div class="map-actions">
                   <button type="button" class="button button-outline route-check" aria-controls="quote-map-panel">Preview route</button>

@@ -1,5 +1,6 @@
 const normalize = value => value.normalize('NFD').replace(/\p{Diacritic}/gu, '')
   .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const startsWithStreetNumber = value => /^\d+\w*[-\d]*\s+\S/.test(value);
 
 let catalog;
 let catalogRequest;
@@ -40,6 +41,7 @@ export function withinUsBoundary(lat, lng, polygons) {
 
 export function addLocationSuggestions(form) {
   const fields = [form.elements.pickup, form.elements.dropoff];
+  const selectedAddresses = new Map();
   let devicePickup;
 
   for (const field of fields) {
@@ -48,6 +50,8 @@ export function addLocationSuggestions(form) {
     let matches = [];
     let active = -1;
     let request = 0;
+    let lookupTimer;
+    let addressLookup;
 
     field.setAttribute('role', 'combobox');
     field.setAttribute('aria-autocomplete', 'list');
@@ -56,6 +60,8 @@ export function addLocationSuggestions(form) {
 
     function closeList() {
       request++;
+      clearTimeout(lookupTimer);
+      addressLookup?.abort();
       list.hidden = true;
       active = -1;
       count.textContent = '';
@@ -64,7 +70,9 @@ export function addLocationSuggestions(form) {
     }
 
     function choose(index) {
-      field.value = matches[index].label;
+      const place = matches[index];
+      field.value = place.label;
+      if (!place.key) selectedAddresses.set(field, place);
       closeList();
       field.dispatchEvent(new Event('input', { bubbles: true }));
     }
@@ -77,28 +85,10 @@ export function addLocationSuggestions(form) {
       option.scrollIntoView({ block: 'nearest' });
     }
 
-    field.addEventListener('input', async () => {
-      if (field.value !== devicePickup?.label && field === fields[0]) devicePickup = undefined;
-      closeList();
-      const query = normalize(field.value);
-      if (query.length < 2 || field !== document.activeElement ||
-        field.value === devicePickup?.label || (field === fields[1] && query === 'unsure')) return;
-
-      const current = request;
-      try {
-        const { entries, byName } = await loadCatalog();
-        if (request !== current || byName.has(query)) return;
-        matches = [];
-        for (const place of entries) {
-          if (place.key.startsWith(query)) matches.push(place);
-          if (matches.length === 7) break;
-        }
-      } catch {
-        if (request === current) count.textContent = 'City suggestions are temporarily unavailable.';
-        return;
-      }
+    function showMatches(places, emptyMessage) {
+      matches = places;
       if (!matches.length) {
-        count.textContent = 'No matching U.S. city. Try a nearby city.';
+        count.textContent = emptyMessage;
         return;
       }
       list.replaceChildren(...matches.map(({ label }, index) => {
@@ -113,6 +103,52 @@ export function addLocationSuggestions(form) {
       list.hidden = false;
       field.setAttribute('aria-expanded', 'true');
       count.textContent = `${matches.length} U.S. locations available.`;
+    }
+
+    async function suggestAddresses(query, current) {
+      addressLookup = new AbortController();
+      try {
+        const response = await fetch('/.netlify/functions/address-suggestions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query }),
+          signal: addressLookup.signal,
+        });
+        if (!response.ok) throw new Error('Address suggestions unavailable');
+        const places = await response.json();
+        if (request === current) showMatches(places, 'No matching street address. Try adding the city or ZIP code.');
+      } catch {
+        if (request === current) count.textContent = 'Address suggestions are temporarily unavailable. Try a city and state.';
+      }
+    }
+
+    field.addEventListener('input', async () => {
+      if (field.value !== devicePickup?.label && field === fields[0]) devicePickup = undefined;
+      if (field.value !== selectedAddresses.get(field)?.label) selectedAddresses.delete(field);
+      closeList();
+      const text = field.value.trim();
+      const query = normalize(text);
+      if (query.length < 2 || field !== document.activeElement || selectedAddresses.has(field) ||
+        field.value === devicePickup?.label || (field === fields[1] && query === 'unsure')) return;
+
+      const current = request;
+      if (startsWithStreetNumber(text)) {
+        if (text.length >= 5) lookupTimer = setTimeout(() => suggestAddresses(text, current), 350);
+        return;
+      }
+
+      try {
+        const { entries, byName } = await loadCatalog();
+        if (request !== current || byName.has(query)) return;
+        const places = [];
+        for (const place of entries) {
+          if (place.key.startsWith(query)) places.push(place);
+          if (places.length === 7) break;
+        }
+        showMatches(places, 'No matching U.S. city. Try a nearby city.');
+      } catch {
+        if (request === current) count.textContent = 'City suggestions are temporarily unavailable.';
+      }
     });
 
     field.addEventListener('keydown', event => {
@@ -146,6 +182,8 @@ export function addLocationSuggestions(form) {
 
   function find(field) {
     if (field === fields[0] && field.value === devicePickup?.label) return devicePickup;
+    const address = selectedAddresses.get(field);
+    if (field.value === address?.label) return address;
     return catalog?.byName.get(normalize(field.value));
   }
 
@@ -154,7 +192,7 @@ export function addLocationSuggestions(form) {
     errorFor(field) {
       if (!fields.includes(field) || !field.value.trim() || find(field) ||
         (field === fields[1] && field.value.trim().toLowerCase() === 'unsure')) return '';
-      return 'Enter a matching U.S. city and state.';
+      return 'Choose a U.S. street address from the suggestions, or enter a matching city and state.';
     },
     pointFor(field) {
       return find(field)?.point;
