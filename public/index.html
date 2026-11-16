@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="RS on the Go LLC offers 24/7 towing and vehicle, freight, and equipment hauling from Charlotte across North Carolina and beyond. Call or request a free quote.">
+  <meta name="theme-color" content="#f7f7f8">
+  <title>24/7 Towing &amp; Hauling in North Carolina | RS on the Go LLC</title>
+  <link rel="icon" href="/assets/rs-logo.webp" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400..800&amp;display=swap">
+  <link rel="stylesheet" href="/assets/site.css">
+  <script type="module" src="/assets/site.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/">
+        <img src="/assets/rs-logo.webp" width="276" height="186" alt="">
+        <span>RS on the Go LLC</span>
+      </a>
+      <nav class="navigation" id="site-nav" aria-label="Main">
+        <a href="#services">Services</a>
+        <a href="#work">Our work</a>
+        <a href="#reviews">Reviews</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <a class="button button-outline header-call" href="tel:+12392465837" aria-label="Call RS on the Go">Call</a>
+        <a class="button header-quote" href="#contact" data-quote>Get a quote</a>
+        <button class="button button-outline menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" hidden>Menu</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <section class="container hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="hero-kicker">Charlotte, NC <span aria-hidden="true">·</span> Available 24/7</p>
+        <h1 id="hero-title">Towing &amp; hauling across North Carolina</h1>
+        <p class="intro">We handle breakdowns, scheduled vehicle and equipment moves, and long-distance freight.</p>
+        <div class="actions">
+          <a class="button" href="#contact" data-quote>Get a free quote <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+      <img class="hero-image" src="/assets/hauling-hero.webp" srcset="/assets/hauling-hero-small.webp 640w, /assets/hauling-hero.webp 1280w" sizes="(max-width: 760px) calc(100vw - 24px), (max-width: 1240px) 69vw, 860px" width="1280" height="720" alt="RS on the Go pickup hitched to a loaded equipment trailer" fetchpriority="high">
+    </section>
+
+    <section class="service-section section" id="services" aria-labelledby="services-title">
+      <div class="container">
+        <h2 id="services-title">Towing &amp; hauling services</h2>
+        <div class="service-list" data-reveal>
+          <article class="service-row">
+            <h3>Vehicle towing &amp; transport</h3>
+            <p>Local towing and longer-distance transport for cars, trucks, SUVs, and vehicles that can’t be driven.</p>
+            <a class="text-link" href="#contact" data-quote data-service="Vehicle towing or transport">Get a vehicle quote</a>
+          </article>
+          <article class="service-row">
+            <h3>Equipment hauling</h3>
+            <p>Skid steers, tractors, and other construction or agricultural equipment. Schedule one move or recurring pickups.</p>
+            <a class="text-link" href="#contact" data-quote data-service="Equipment hauling">Get an equipment quote</a>
+          </article>
+          <article class="service-row">
+            <h3>Freight &amp; cargo transport</h3>
+            <p>Flatbed hauling for palletized freight, oversized cargo, and time-sensitive loads. Share the load dimensions when requesting a quote.</p>
+            <a class="text-link" href="#contact" data-quote data-service="Freight or cargo transport">Get a freight quote</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container" id="work" aria-labelledby="work-title">
+      <h2 id="work-title">On the road</h2>
+      <div class="work-grid" data-reveal>
+        <figure>
+          <img src="/assets/equipment-transport.webp" width="1100" height="619" alt="Tanks and equipment secured on a trailer behind the RS on the Go pickup" loading="lazy" decoding="async">
+          <figcaption>Equipment transport</figcaption>
+        </figure>
+        <figure>
+          <img src="/assets/flatbed-freight.webp" width="900" height="600" alt="Blue-wrapped cargo strapped onto a flatbed trailer at a warehouse" loading="lazy" decoding="async">
+          <figcaption>Flatbed freight</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="review-section section" id="reviews" aria-labelledby="reviews-title">
+      <div class="container">
+        <div class="review-header">
+          <div>
+            <h2 id="reviews-title">Customer reviews</h2>
+            <p>Had a tow or haul with RS? Tell us how it went.</p>
+          </div>
+          <a class="button button-outline" href="/reviews/" data-review-open>Write a review <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="review-list" data-review-list>
+          <article class="review-card review-placeholder"><h3>Vehicle towing</h3><p>Awaiting customer feedback</p></article>
+          <article class="review-card review-placeholder"><h3>Equipment hauling</h3><p>Awaiting customer feedback</p></article>
+          <article class="review-card review-placeholder"><h3>Freight transport</h3><p>Awaiting customer feedback</p></article>
+        </div>
+        <template id="review-card">
+          <figure class="review-card">
+            <p class="review-score"></p>
+            <blockquote></blockquote>
+            <figcaption><span class="review-author"></span><time hidden></time></figcaption>
+          </figure>
+        </template>
+      </div>
+    </section>
+
+    <section class="faq-section section" id="faq" aria-labelledby="faq-title">
+      <div class="container split-section">
+        <h2 id="faq-title">Before you book</h2>
+        <div class="faq-list" data-reveal>
+          <details name="site-faq">
+            <summary>What areas do you serve?</summary>
+            <p>We’re based in Charlotte and serve North Carolina. We also take long-distance and interstate jobs. Include both locations so we can confirm your route.</p>
+          </details>
+          <details name="site-faq">
+            <summary>Can you move a vehicle that won’t start?</summary>
+            <p>Yes. Tell us if the vehicle can roll, steer, and brake so we can plan the pickup.</p>
+          </details>
+          <details name="site-faq">
+            <summary>Can I schedule a haul in advance?</summary>
+            <p>Yes. Include your preferred pickup date when requesting a quote. For an urgent job, see <a href="#tow-help">same-day towing</a>.</p>
+          </details>
+          <details name="site-faq">
+            <summary>What information do you need for a quote?</summary>
+            <p>Send the pickup and drop-off cities, what needs to be moved, and your preferred timing. For equipment or freight, include the dimensions and weight if you know them.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="quote-section section" id="contact" aria-labelledby="contact-title">
+      <div class="container">
+        <h2 id="contact-title">How can we help?</h2>
+        <div class="help-layout" data-reveal>
+          <div>
+            <div class="help-options">
+              <a class="help-option" id="tow-help" href="tel:+12392465837">
+                <svg aria-hidden="true" class="help-icon" width="24" height="24"><use href="/assets/help-icons.svg#phone"></use></svg>
+                <span><strong>Call for a tow</strong><span>Available 24/7 · (239) 246-5837</span></span>
+                <span aria-hidden="true">→</span>
+              </a>
+              <a class="help-option" href="#quote-form" data-quote>
+                <svg aria-hidden="true" class="help-icon" width="24" height="24"><use href="/assets/help-icons.svg#clipboard"></use></svg>
+                <span><strong>Request a quote</strong><span>Plan a vehicle, equipment, or freight haul.</span></span>
+                <span aria-hidden="true">→</span>
+              </a>
+              <a class="help-option" href="sms:+12392465837?body=Hi%20RS%20on%20the%20Go%2C%20I%20have%20a%20question%20about%20a%20haul.">
+                <svg aria-hidden="true" class="help-icon" width="24" height="24"><use href="/assets/help-icons.svg#message"></use></svg>
+                <span><strong>Ask a question</strong><span>Text us about availability or a service.</span></span>
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+            <p class="help-booked">Already booked? <a href="sms:+12392465837?body=Hi%20RS%20on%20the%20Go%2C%20could%20I%20get%20an%20update%20on%20my%20booking%3F">Text for an update</a> <span aria-hidden="true">·</span> <a href="mailto:ronthego586@gmail.com">Email us</a></p>
+          </div>
+          <figure class="help-photo">
+            <img src="/assets/towing-stock.webp" width="960" height="480" alt="A worker beside a car loaded onto a flatbed tow truck" loading="lazy" decoding="async">
+            <figcaption>Stock photo by <a href="https://www.pexels.com/photo/a-tow-truck-with-car-10061763/">Daniel Queiroz</a></figcaption>
+          </figure>
+        </div>
+        <div class="quote-entry">
+          <form class="form-card quote-form" id="quote-form" name="quote-request" method="POST" action="/quote-sent/" data-netlify="true" netlify-honeypot="bot-field" aria-label="Quote request">
+            <input type="hidden" name="form-name" value="quote-request">
+            <p hidden><label>Leave this blank <input name="bot-field"></label></p>
+            <fieldset class="quote-step">
+              <legend tabindex="-1">Where are we going?</legend>
+              <div class="form-row">
+                <div class="field">
+                  <label for="pickup">Pickup location</label>
+                  <div class="location-input">
+                    <input id="pickup" name="pickup" maxlength="120" autocomplete="off" required aria-describedby="dropoff-hint" data-required-message="Enter a U.S. city and state or use your current location.">
+                    <ul id="pickup-suggestions" class="location-suggestions" role="listbox" aria-label="Pickup suggestions" hidden></ul>
+                    <span class="sr-only" id="pickup-suggestion-status" role="status"></span>
+                  </div>
+                  <button type="button" class="map-link map-location" hidden>Use my location</button>
+                </div>
+                <div class="field">
+                  <label for="dropoff">Drop-off location</label>
+                  <div class="location-input">
+                    <input id="dropoff" name="dropoff" maxlength="120" autocomplete="off" required aria-describedby="dropoff-hint" data-required-message="Enter a U.S. city and state or type ‘Unsure’.">
+                    <ul id="dropoff-suggestions" class="location-suggestions" role="listbox" aria-label="Drop-off suggestions" hidden></ul>
+                    <span class="sr-only" id="dropoff-suggestion-status" role="status"></span>
+                  </div>
+                </div>
+              </div>
+              <p class="field-hint" id="dropoff-hint">U.S. routes only. Start typing a city to see matches. If you don’t know the drop-off, enter “Unsure.”</p>
+              <div class="route-preview" hidden>
+                <div class="map-actions">
+                  <button type="button" class="button button-outline route-check" aria-controls="quote-map-panel google-route-panel">Preview route</button>
+                </div>
+                <p class="field-hint route-status" role="status"></p>
+                <a class="text-link route-link" target="_blank" rel="noopener noreferrer" hidden>Open in Google Maps</a>
+                <div class="google-route" id="google-route-panel" hidden>
+                  <iframe title="Driving directions in Google Maps" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                </div>
+                <div class="map-panel" id="quote-map-panel" hidden>
+                  <div class="route-map" role="region" aria-label="Pickup and drop-off map"></div>
+                </div>
+              </div>
+            </fieldset>
+            <fieldset class="quote-step">
+              <legend tabindex="-1">What are you moving?</legend>
+              <div class="field">
+                <label for="service">Service</label>
+                <select id="service" name="service" required data-required-message="Choose the service you need.">
+                  <option value="">Select a service</option>
+                  <option>Vehicle towing or transport</option>
+                  <option>Equipment hauling</option>
+                  <option>Freight or cargo transport</option>
+                  <option>Urgent or same-day pickup</option>
+                  <option>Other or unsure</option>
+                </select>
+              </div>
+              <div class="field" data-load-fields="vehicle">
+                <label for="vehicle-runs">Does the vehicle run? <span>(optional)</span></label>
+                <select id="vehicle-runs" name="vehicle_runs">
+                  <option value="">Choose an option</option>
+                  <option>Yes</option>
+                  <option>No</option>
+                  <option>Unsure</option>
+                </select>
+              </div>
+              <div class="form-row" data-load-fields="freight">
+                <div class="field"><label for="load-weight">Estimated weight in lb <span>(optional)</span></label><input id="load-weight" name="load_weight" type="number" min="1" max="1000000"></div>
+                <div class="field"><label for="load-dimensions">Length × width × height <span>(optional)</span></label><input id="load-dimensions" name="load_dimensions" maxlength="120" placeholder="Example: 8 × 5 × 4 ft"></div>
+              </div>
+              <div class="field">
+                <label for="details">Load details and preferred date</label>
+                <textarea id="details" name="details" rows="3" maxlength="2000" aria-describedby="quote-hint" required data-required-message="Briefly describe the vehicle, equipment, or freight."></textarea>
+                <p class="field-hint" id="quote-hint">Include your vehicle or load type and a pickup date if you have one.</p>
+              </div>
+            </fieldset>
+            <fieldset class="quote-step">
+              <legend tabindex="-1">How can we reach you?</legend>
+              <div class="field"><label for="name">Full name</label><input id="name" name="name" autocomplete="name" maxlength="120" required data-required-message="Enter your name."></div>
+              <div class="field"><label for="phone">Phone</label><input id="phone" type="tel" name="phone" autocomplete="tel" maxlength="40" required data-required-message="Enter the phone number we should call."></div>
+              <div class="field"><label for="email">Email <span>(optional)</span></label><input id="email" type="email" name="email" autocomplete="email" maxlength="254"></div>
+            </fieldset>
+            <div class="quote-actions">
+              <button class="button button-outline quote-back" type="button" hidden>Back</button>
+              <button class="button quote-next" type="submit">Send quote request</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div><strong>RS on the Go LLC</strong><p>Charlotte, NC · USDOT 4238566</p></div>
+      <nav aria-label="Footer">
+        <a href="#services">Services</a>
+        <a href="#contact">Contact</a>
+        <a href="/reviews/" data-review-open>Leave a review</a>
+      </nav>
+    </div>
+  </footer>
+
+  <dialog class="quote-dialog" id="quote-dialog" aria-labelledby="quote-dialog-title">
+    <div class="quote-dialog-header">
+      <h2 id="quote-dialog-title" tabindex="-1" autofocus>Request a free quote</h2>
+      <button class="button button-outline quote-close" type="button" aria-label="Close quote form">Close</button>
+    </div>
+    <p class="quote-progress-label" aria-live="polite">Step 1 of 3 · Route</p>
+    <ol class="quote-progress" aria-label="Quote progress">
+      <li aria-current="step">Route</li>
+      <li>Load</li>
+      <li>Contact</li>
+    </ol>
+  </dialog>
+  <dialog class="quote-dialog review-dialog" id="review-dialog" aria-labelledby="review-dialog-title">
+    <div class="quote-dialog-header">
+      <h2 id="review-dialog-title" tabindex="-1" autofocus>Leave a review</h2>
+      <button class="button button-outline quote-close review-close" type="button" aria-label="Close review form">Close</button>
+    </div>
+    <p class="intro">Tell us how your tow or haul went.</p>
+    <div class="review-form-slot">
+      <p class="field-hint" role="status">Loading the review form…</p>
+    </div>
+  </dialog>
+</body>
+</html>

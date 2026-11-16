@@ -1,88 +1,36 @@
-# RS on the Go — Review System Setup Guide
+# RS on the Go LLC website
 
-## Files included
-| File               | What it does                                      |
-|--------------------|---------------------------------------------------|
-| reviews.html       | Public review page (form + approved reviews)      |
-| submit_review.php  | Receives form, saves to DB, emails you            |
-| get_reviews.php    | Returns approved reviews as JSON                  |
-| admin.php          | Your private moderation panel                     |
-| db_setup.sql       | Creates the database table (run once)             |
+The site is plain HTML, CSS, and JavaScript. Netlify serves the `public` folder and handles the quote and review forms. There are no packages to install or build commands to run.
 
----
+## Preview locally
 
-## Step 1 — Create the database table
-1. Log into cPanel on your host
-2. Open **phpMyAdmin**
-3. Click your database name on the left
-4. Click the **SQL** tab at the top
-5. Paste the contents of `db_setup.sql`
-6. Click **Go**
+From the Git repository root, run:
 
----
-
-## Step 2 — Fill in your config
-Open these three PHP files and update the config block at the top of each:
-
-**submit_review.php, get_reviews.php, admin.php:**
-```php
-define('DB_HOST', 'localhost');         // usually stays as localhost
-define('DB_NAME', 'your_db_name');      // from cPanel > MySQL Databases
-define('DB_USER', 'your_db_user');      // same
-define('DB_PASS', 'your_db_password');  // same
+```powershell
+python -m http.server 8000 --bind 127.0.0.1 --directory public
 ```
 
-**submit_review.php only — email settings:**
-```php
-define('NOTIFY_EMAIL', 'ronthego586@gmail.com');  // where to send alerts
-define('SMTP_USER',    'ronthego586@gmail.com');
-define('SMTP_PASS',    'xxxx xxxx xxxx xxxx');     // Gmail App Password (see below)
-define('ADMIN_URL',    'https://rsonthegollc.com/admin.php');
-```
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in a browser. This serves the pages, U.S. city suggestions, and the fallback map. To run the route function locally with a configured map key, use `npx netlify-cli dev` from the repository root and open the URL it prints. Netlify Dev reads variables from a local `.env` file or a linked project. Allow the local preview origin on the Google key when testing an embed. Test form delivery on a Netlify deploy. [Netlify Dev functions](https://docs.netlify.com/api-and-cli-guides/cli-guides/manage-functions/#invoke-functions-while-running-netlify-dev).
 
-**admin.php only — your login password:**
-```php
-define('ADMIN_PASSWORD', 'changeme123');  // pick something strong!
-```
+## Deploy from GitHub
 
----
+1. Push the branch containing the redesign to GitHub. In Netlify, import the existing RS Towing repository from GitHub and select that branch.
+2. Leave the base directory and build command blank. The publish directory is `public`, as configured in `netlify.toml`.
+3. In the Netlify project’s **Forms** tab, enable form detection and redeploy. Check that Netlify lists two forms, `quote-request` and `customer-review`. [Form setup](https://docs.netlify.com/manage/forms/setup/).
+4. Under **Forms → Submission notifications**, add an email notification for each form and enter the inbox where leads and feedback should arrive. Netlify accepts an active team member’s address or, where available, an outside address that completes email confirmation. The notification recipient can be changed from this screen. [Form notifications](https://docs.netlify.com/manage/forms/notifications/).
+5. Submit a test quote and a test review on the Netlify URL. Verify that each opens its confirmation page, appears in the Forms dashboard, and reaches the intended inbox. Check that `/reviews.html` redirects to `/reviews/`.
+6. Once the site and forms pass those checks, add `rsonthegollc.com` under **Domain management** if you want to keep the existing domain. Follow the DNS instructions Netlify shows for the project. If the domain also handles business email, preserve its existing mail-related DNS records during the website move. [Custom domains](https://docs.netlify.com/manage/domains/get-started-with-domains/).
 
-## Step 3 — Set up Gmail App Password (for email notifications)
-1. Go to https://myaccount.google.com/security
-2. Make sure **2-Step Verification** is ON
-3. Search for **"App passwords"** in the search bar
-4. Create one → choose "Mail" → copy the 16-character code
-5. Paste that code as `SMTP_PASS` in submit_review.php
+## Email and reviews
 
----
+Netlify handles website submissions and can send notifications to the inbox you choose. The public **Email us** link in `public/index.html` still points to the business address from the previous site. Update that link if the public contact address changes.
 
-## Step 4 — Install PHPMailer
-1. Download from: https://github.com/PHPMailer/PHPMailer/archive/refs/heads/master.zip
-2. Unzip it
-3. Rename the folder to **`PHPMailer`** (exactly this name)
-4. Upload the whole folder to the same directory as submit_review.php
+Incoming reviews live in Netlify Forms. To publish one, confirm that the customer checked the publishing permission box, then add an object to `public/assets/reviews.json` with their public first name as `name`, review as `quote`, a whole-number `rating` from 1 to 5, and the review `date` in `YYYY-MM-DD` format. Keep email addresses and other contact details out of the public file. Redeploy to show the three most recent approved reviews. If a review has no date, it follows the dated entries. If the old website received reviews or quotes, export them from the previous database or form provider before retiring those services. The Git repository contains the old review schema and site code, but no database export.
 
----
+## Route preview
 
-## Step 5 — Upload all files
-Upload to your server's public folder (usually `public_html`):
-- reviews.html
-- submit_review.php
-- get_reviews.php
-- admin.php
-- PHPMailer/ (folder)
+Pickup and drop-off suggestions use the 2026 U.S. Census Places Gazetteer for the 50 states and D.C. The city index is bundled with the site, so text entered into the fields stays in the browser until a route preview or quote submission. **Use my location** fills the pickup coordinates after the customer grants permission and the browser checks them against the Census national boundary. A nearby U.S. city is an alternative if a device location can’t be verified. [Census Gazetteer](https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.html) · [Census boundary files](https://www2.census.gov/geo/tiger/GENZ2025/kml/).
 
----
+To show Google Maps inside the form when a customer selects **Preview route**, enable **Maps Embed API** in a billing-enabled Google Cloud project. Create a browser key restricted to Maps Embed API and the exact website hostnames you use. Set it as `GOOGLE_MAPS_EMBED_KEY` in Netlify with **Functions** access and redeploy. The key is included in the browser’s iframe URL, so the website restrictions matter. [Google Maps Embed setup](https://developers.google.com/maps/documentation/embed/get-api-key).
 
-## How to use it
-- **Customers visit:** `yoursite.com/reviews.html` to leave a review
-- **You get an email** with the review details and a link to your admin panel
-- **You visit:** `yoursite.com/admin.php` — enter your password — approve or reject
-
----
-
-## Adding the reviews link to your main site
-In your main `index.html` navigation, add:
-```html
-<a href="reviews.html">Reviews</a>
-```
+If Google Maps isn’t configured, a `MAPBOX_ACCESS_TOKEN` enables an inline driving route. In the local Python preview or without either key, **Preview route** opens a map with the two selected locations, a dashed line, and a labeled straight-line distance. **Open in Google Maps** remains available for driving directions. The quote sends the selected cities or the pickup coordinates from **Use my location**. [OpenStreetMap tile usage policy](https://operations.osmfoundation.org/policies/tiles/).

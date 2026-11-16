@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Share feedback about your tow or haul with RS on the Go LLC.">
+  <title>Leave a Review | RS on the Go LLC</title>
+  <link rel="icon" href="/assets/rs-logo.webp" type="image/webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400..800&amp;display=swap">
+  <link rel="stylesheet" href="/assets/site.css">
+</head>
+<body class="inner-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header simple-header">
+    <div class="container header-inner">
+      <a class="brand" href="/">
+        <img src="/assets/rs-logo.webp" width="276" height="186" alt="">
+        <span>RS on the Go LLC</span>
+      </a>
+      <div class="header-actions"><a class="button button-outline header-call" href="tel:+12392465837"><span class="header-number">(239) 246-5837</span><span class="header-call-short">Call</span></a></div>
+    </div>
+  </header>
+  <main class="section" id="main" tabindex="-1">
+    <div class="container split-section">
+      <div>
+        <h1>Leave a review</h1>
+        <p class="intro">Tell us how your tow or haul went. Your feedback goes directly to our team.</p>
+      </div>
+      <form class="form-card" name="customer-review" method="POST" action="/review-sent/" data-netlify="true" netlify-honeypot="bot-field" aria-label="Customer review">
+        <input type="hidden" name="form-name" value="customer-review">
+        <p hidden><label>Leave this blank <input name="bot-field"></label></p>
+        <div class="form-row">
+          <div class="field"><label for="review-name">First name <span>(optional)</span></label><input id="review-name" name="first_name" autocomplete="given-name" maxlength="80"></div>
+          <div class="field"><label for="review-email">Email for follow-up <span>(optional)</span></label><input id="review-email" type="email" name="email" autocomplete="email" maxlength="254"></div>
+        </div>
+        <fieldset class="rating-field">
+          <legend>How was your experience?</legend>
+          <div class="rating-options">
+            <label><input type="radio" name="rating" value="1" required><span aria-hidden="true">★</span><span class="sr-only">1 out of 5 stars</span></label>
+            <label><input type="radio" name="rating" value="2"><span aria-hidden="true">★</span><span class="sr-only">2 out of 5 stars</span></label>
+            <label><input type="radio" name="rating" value="3"><span aria-hidden="true">★</span><span class="sr-only">3 out of 5 stars</span></label>
+            <label><input type="radio" name="rating" value="4"><span aria-hidden="true">★</span><span class="sr-only">4 out of 5 stars</span></label>
+            <label><input type="radio" name="rating" value="5"><span aria-hidden="true">★</span><span class="sr-only">5 out of 5 stars</span></label>
+          </div>
+        </fieldset>
+        <div class="field"><label for="review">Your feedback</label><textarea id="review" name="review" rows="5" maxlength="2000" required></textarea></div>
+        <label class="checkbox"><input type="checkbox" name="publish-permission" value="yes"> You may share my feedback and first name on the website.</label>
+        <button class="button" type="submit">Send review</button>
+      </form>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div><strong>RS on the Go LLC</strong><p>Charlotte, NC · USDOT 4238566</p></div>
+      <nav aria-label="Footer"><a href="/">Home</a><a href="/#contact">Request a quote</a></nav>
+    </div>
+  </footer>
+</body>
+</html>
