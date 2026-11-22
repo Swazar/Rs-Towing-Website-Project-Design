@@ -1,30 +1,39 @@
-const leafletBase = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/';
 const names = { pickup: 'Pickup', dropoff: 'Drop-off' };
 const blue = '#1761bf';
 let leaflet;
+let mapTools;
 
-function loadLeaflet() {
+export function loadLeaflet() {
   if (leaflet) return leaflet;
   const style = document.createElement('link');
   style.rel = 'stylesheet';
-  style.href = leafletBase + 'leaflet.css';
-  style.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-  const script = document.createElement('script');
-  script.src = leafletBase + 'leaflet.js';
-  script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-
-  leaflet = Promise.all([style, script].map(asset => new Promise((resolve, reject) => {
-    asset.crossOrigin = 'anonymous';
-    asset.onload = resolve;
-    asset.onerror = reject;
-    document.head.append(asset);
-  }))).then(() => window.L).catch(() => {
+  style.href = '/assets/map-tools.css';
+  const css = new Promise((resolve, reject) => { style.onload = resolve; style.onerror = reject; document.head.append(style); });
+  leaflet = Promise.all([css, import('./map-tools.bundle.js')]).then(([, tools]) => {
+    mapTools = tools; window.L = tools.L; return tools.L;
+  }).catch(() => {
     style.remove();
-    script.remove();
     leaflet = undefined;
     throw new Error('Map tools are unavailable');
   });
   return leaflet;
+}
+
+export function addBasemap(map) { return mapTools.addBasemap(map); }
+
+export async function renderRoadRoute(element, route, pins) {
+  const L = await loadLeaflet();
+  if (!element.isConnected) return () => {};
+  const map = L.map(element, { scrollWheelZoom: false });
+  addBasemap(map);
+  const layers = L.featureGroup().addTo(map);
+  L.polyline(route.path, { color: blue, weight: 5 }).addTo(layers);
+  for (const [name, pin] of Object.entries(pins)) {
+    L.circleMarker(pin, { radius: 7, color: blue, fillColor: name === 'pickup' ? 'white' : blue, fillOpacity: 1 })
+      .bindTooltip(names[name], { permanent: true, direction: 'top' }).addTo(layers);
+  }
+  map.fitBounds(layers.getBounds(), { padding: [25, 25], maxZoom: 15, animate: false });
+  return () => map.remove();
 }
 
 export function addRoutePreview(form, locations, validateRoute) {
@@ -75,10 +84,7 @@ export function addRoutePreview(form, locations, validateRoute) {
     panel.hidden = false;
     if (!map) {
       map = L.map(panel.querySelector('.route-map'), { scrollWheelZoom: false }).setView([35.2271, -80.8431], 11);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(map);
+      addBasemap(map);
       layers = L.featureGroup().addTo(map);
     }
     map.invalidateSize({ pan: false });
@@ -98,6 +104,7 @@ export function addRoutePreview(form, locations, validateRoute) {
   preview.hidden = false;
   form.elements.pickup.addEventListener('input', clearRoute);
   form.elements.dropoff.addEventListener('input', clearRoute);
+  form.elements.pickup.addEventListener('routechange', clearRoute);
   locateButton.hidden = !navigator.geolocation;
   locateButton.addEventListener('click', async () => {
     const initialPickup = form.elements.pickup.value;
@@ -129,7 +136,7 @@ export function addRoutePreview(form, locations, validateRoute) {
     const pickup = pointFor('pickup')?.join(',');
     const dropoff = pointFor('dropoff')?.join(',');
     if (!pickup || !dropoff) {
-      status.textContent = 'Choose a drop-off city to preview a route. You can continue your quote without it.';
+      status.textContent = 'A route preview needs two matched locations. You can send your quote with a manual or undecided location.';
       return;
     }
     showDirectionsLink();
@@ -156,7 +163,7 @@ export function addRoutePreview(form, locations, validateRoute) {
       const minutes = route.minutes % 60;
       const duration = hours ? `${hours} hr ${minutes} min` : `${minutes} min`;
       const streetOnly = Object.keys(names).some(name => locations.isStreetOnly(form.elements[name]));
-      const note = streetOnly ? 'Estimate uses the selected street without a house number.' : 'Actual tow mileage may vary.';
+      const note = streetOnly ? 'Estimate uses the selected street without a house number.' : 'Driving estimate. RS will confirm pickup availability.';
       status.textContent = `About ${miles} driving miles · ${duration}. ${note}`;
     } catch {
       if (pending !== request) return;

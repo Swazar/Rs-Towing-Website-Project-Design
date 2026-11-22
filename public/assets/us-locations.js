@@ -43,6 +43,7 @@ export function withinUsBoundary(lat, lng, polygons) {
 export function addLocationSuggestions(form) {
   const fields = [form.elements.pickup, form.elements.dropoff];
   const selectedAddresses = new Map();
+  const manualFields = new Set();
   let devicePickup;
 
   for (const field of fields) {
@@ -134,7 +135,7 @@ export function addLocationSuggestions(form) {
         ? 'Street selected. Add the exact house number in Load details if you know it.' : '';
       const text = field.value.trim();
       const query = normalize(text);
-      if (query.length < 2 || field !== document.activeElement || selectedAddresses.has(field) ||
+      if (query.length < 2 || manualFields.has(field) || field.readOnly || field !== document.activeElement || selectedAddresses.has(field) ||
         field.value === devicePickup?.label || (field === fields[1] && query === 'unsure')) return;
 
       const current = request;
@@ -208,12 +209,34 @@ export function addLocationSuggestions(form) {
   return {
     prepare: () => loadCatalog().catch(() => {}),
     errorFor(field) {
-      if (!fields.includes(field) || !field.value.trim() || find(field) ||
+      if (!fields.includes(field) || manualFields.has(field) || !field.value.trim() || find(field) ||
         (field === fields[1] && field.value.trim().toLowerCase() === 'unsure')) return '';
       return 'Choose a U.S. street address from the suggestions, or enter a matching city and state.';
     },
     pointFor(field) {
+      if (manualFields.has(field)) return;
       return find(field)?.point;
+    },
+    setManual(field, manual) {
+      if (manual) {
+        manualFields.add(field);
+        selectedAddresses.delete(field);
+        if (field === fields[0]) devicePickup = undefined;
+      } else manualFields.delete(field);
+    },
+    snapshot() {
+      return Object.fromEntries(fields.map(field => [field.name, find(field)]));
+    },
+    restore(saved) {
+      selectedAddresses.clear();
+      devicePickup = undefined;
+      for (const field of fields) {
+        const place = saved?.[field.name];
+        if (place?.label === field.value && Array.isArray(place.point) && place.point.length === 2 &&
+            place.point.every(Number.isFinite) && Math.abs(place.point[0]) <= 90 && Math.abs(place.point[1]) <= 180) {
+          selectedAddresses.set(field, place);
+        }
+      }
     },
     isStreetOnly(field) {
       return Boolean(find(field)?.streetOnly);
@@ -224,7 +247,7 @@ export function addLocationSuggestions(form) {
         throw error;
       });
       const polygons = await boundaryRequest;
-      if (fields[0].value !== expectedValue) return;
+      if (fields[0].value !== expectedValue || manualFields.has(fields[0])) return;
       if (!withinUsBoundary(lat, lng, polygons)) return false;
       const label = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
       devicePickup = { label, point: [lat, lng] };

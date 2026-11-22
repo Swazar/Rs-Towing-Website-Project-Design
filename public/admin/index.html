@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Owner workspace | RS on the Go LLC</title>
+  <link rel="icon" href="/assets/rs-logo.webp" type="image/webp">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400..800&amp;display=swap">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/admin.css">
+  <link rel="stylesheet" href="/assets/admin-shell.css">
+  <link rel="stylesheet" href="/assets/admin-settings.css">
+  <link rel="stylesheet" href="/assets/admin-email.css?v=7">
+  <link rel="stylesheet" href="/assets/admin-assistant.css">
+  <link rel="stylesheet" href="/assets/workspace-customization.css">
+  <link rel="stylesheet" href="/assets/workspace-themes.css">
+  <link rel="stylesheet" href="/assets/admin-login.css">
+  <script type="module" src="/assets/admin.bundle.js?v=7"></script>
+</head>
+<body class="admin-page owner-login-screen">
+  <a class="skip-link" href="#admin-main">Skip to workspace</a>
+  <header class="owner-header">
+    <a class="brand" href="/"><span class="header-logo"><img src="/assets/rs-logo.webp" width="276" height="186" alt=""></span><span>RS on the Go<span class="brand-caption">OWNER WORKSPACE</span></span></a>
+    <div class="owner-header-main">
+      <div class="header-right"><a class="owner-external" href="/" target="_blank" rel="noopener" aria-label="View website (opens in a new tab)"><span>View website</span><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#external-link"/></svg></a><div class="header-account"><button type="button" class="profile-trigger" id="profile-open" aria-label="Open my profile" hidden><span class="owner-avatar" id="header-avatar" aria-hidden="true">RS</span><span class="profile-meta"><span class="account-name" id="header-profile-name">Owner</span><span class="account-role" id="header-profile-role">Owner account</span></span></button><button type="button" class="icon-button" id="owner-logout" aria-label="Sign out" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#log-out"/></svg></button></div></div>
+    </div>
+  </header>
+  <aside class="owner-sidebar" id="owner-sidebar" hidden>
+    <a class="sidebar-brand" href="/"><span class="sidebar-brand-logo"><img src="/assets/rs-logo.webp" width="276" height="186" alt=""></span><span class="sidebar-brand-copy">RS on the Go<span class="sidebar-brand-caption">Owner workspace</span></span></a>
+    <p class="sidebar-label">Workspace</p>
+    <nav class="owner-navigation" aria-label="Owner sections">
+      <button type="button" data-owner-view="overview" aria-current="page"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#layout-dashboard"/></svg><span>Overview</span></button>
+      <button type="button" data-owner-view="enquiries"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#inbox"/></svg><span>Enquiries</span><span class="nav-count" id="enquiry-count"></span></button>
+      <button type="button" data-owner-view="email" data-permission="email" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#mail"/></svg><span>Email</span></button>
+      <button type="button" data-owner-view="reviews" data-permission="reviews"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#star"/></svg><span>Reviews</span><span class="nav-count" id="review-count"></span></button>
+      <button type="button" data-owner-view="website" data-permission="content"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#panels-top-left"/></svg><span>Website</span></button>
+      <button type="button" data-owner-view="settings"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#settings-2"/></svg><span>Settings</span></button>
+    </nav>
+  </aside>
+  <main id="admin-main" class="owner-main" tabindex="-1">
+    <section id="owner-signin" class="signin-panel" aria-labelledby="login-title">
+      <div class="login-welcome">
+        <svg class="login-contours" viewBox="0 0 650 760" preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true"><g stroke="currentColor"><path d="M-180 470 375 55C458 352 273 645-55 815Z"/><path d="M-175 520 415 100C518 403 316 720-40 860Z"/><path d="M-170 570 455 145C578 454 359 795-25 905Z"/><path d="M-165 620 495 190C638 505 402 870-10 950Z"/><path d="M-160 670 535 235C698 556 445 945 5 995Z"/></g></svg>
+        <div class="login-welcome-copy">
+          <h2>Hello,<br>RS on the Go!</h2>
+          <p>Your business, all in one place.<br> Manage requests, keep jobs moving,<br class="login-desktop-break"> and make your next move.</p>
+        </div>
+        <p class="login-copyright">© <span id="login-year">2026</span> RS on the Go LLC. All rights reserved.</p>
+      </div>
+      <div class="login-form-side">
+        <a class="login-brand" href="/">RS on the Go LLC<span>TOWING &amp; HAULING</span></a>
+        <div class="login-form-content">
+          <h1 id="login-title">Welcome Back!</h1>
+          <p class="login-intro" id="login-intro">Sign in to your admin dashboard.</p>
+          <form id="owner-login-form" class="login-form" method="post" action="/admin/">
+            <div class="field login-field"><label for="owner-email">Email or username</label><input id="owner-email" type="text" name="identifier" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254" placeholder="Enter your email or username" required></div>
+            <div class="field login-field"><label for="owner-password">Password</label><div class="login-password"><input id="owner-password" type="password" name="password" autocomplete="current-password" maxlength="200" placeholder="Enter your password" required><button type="button" class="login-password-toggle" id="owner-password-toggle" aria-label="Show password" aria-pressed="false">Show</button></div></div>
+            <button type="submit" class="login-submit" id="owner-login-submit" disabled>Login Now</button>
+          </form>
+          <button type="button" class="login-google" id="owner-google"><svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.6 4.6 0 0 1-1.99 3.02v2.51h3.23c1.89-1.74 2.98-4.3 2.98-7.36Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.41l-3.23-2.51c-.9.6-2.05.96-3.39.96-2.6 0-4.8-1.76-5.58-4.12H3.08v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.42 13.92A6 6 0 0 1 6.1 12c0-.67.11-1.32.32-1.92V7.49H3.08A10 10 0 0 0 2 12c0 1.61.39 3.14 1.08 4.51l3.34-2.59Z"/><path fill="#EA4335" d="M12 5.96c1.47 0 2.79.5 3.82 1.5l2.86-2.86A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.92 5.49l3.34 2.59C7.2 7.72 9.4 5.96 12 5.96Z"/></svg><span>Login with Google</span></button>
+          <p class="login-recovery" id="login-recovery-row">Forgot password? <button type="button" id="owner-recovery">Reset it here</button></p>
+          <div class="login-status" id="login-status" role="status" aria-live="polite" tabindex="-1" hidden></div>
+          <p class="login-preview-note" id="login-preview-note" hidden>Design preview. Live sign-in needs Netlify Identity.<br><a href="/admin/">Open local workspace</a></p>
+        </div>
+        <div class="login-foot"><span>Authorized accounts only</span><a href="/">Back to website</a></div>
+      </div>
+    </section>
+    <div class="workspace-notice" id="owner-notice" data-tone="info" hidden>
+      <span class="notice-symbol" aria-hidden="true"><svg class="ui-icon"><use id="owner-message-icon" href="/assets/admin-icons.svg#check"/></svg></span>
+      <div class="notice-copy" id="owner-message" role="status" aria-live="polite" aria-atomic="true"><strong id="owner-message-title"></strong><p id="owner-message-detail" hidden></p></div>
+      <button type="button" class="notice-dismiss" id="owner-message-dismiss" aria-label="Dismiss notification"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button>
+    </div>
+    <div id="owner-workspace" hidden>
+      <button type="button" class="assistant-launcher" id="assistant-open" aria-label="Open workspace assistant" aria-haspopup="dialog" aria-controls="workspace-assistant" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#message-square"/></svg></button>
+      <div class="owner-heading"><div><p class="owner-eyebrow" id="owner-eyebrow">YOUR BUSINESS, AT A GLANCE</p><h1 id="workspace-title">Overview</h1><p id="workspace-description">A clear view of what needs your attention.</p></div><div class="workspace-meta"><span id="owner-date"></span><span id="owner-account"></span></div></div>
+      <p class="preview-banner" id="owner-preview-note" hidden><span class="preview-dot"></span>Local workspace · Changes and test requests stay on this computer.</p>
+      <section id="owner-overview" class="owner-view" aria-label="Business overview">
+        <div class="overview-metrics" id="overview-metrics"></div>
+        <div class="overview-grid">
+          <div class="overview-column">
+          <section class="workspace-panel recent-panel"><div class="panel-heading"><div><h2>Recent enquiries</h2><p>Your latest requests, ready to review.</p></div><button type="button" class="quiet-button" data-owner-view="enquiries">View all</button></div><div id="overview-recent"></div></section>
+          <section class="workspace-panel calendar-panel"><div class="panel-heading"><div><h2>Calendar</h2><p>Pickups, follow-ups, and reminders · Eastern Time.</p></div><button type="button" class="quiet-button" id="calendar-today">Today</button></div><div class="calendar-content"><div class="calendar-month-grid"><div class="calendar-month-bar"><button type="button" class="icon-button calendar-previous" id="calendar-previous" aria-label="Previous month"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></button><h3 id="calendar-month" aria-live="polite"></h3><button type="button" class="icon-button calendar-next" id="calendar-next" aria-label="Next month"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></button></div><div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div><div id="calendar-days" class="calendar-days" role="group" aria-label="Calendar days"></div></div><div class="calendar-day-agenda"><div class="calendar-agenda-heading"><h3 id="calendar-selected-date"></h3><button type="button" class="quiet-button" id="calendar-add">Add reminder</button></div><div id="calendar-agenda" class="calendar-agenda"></div></div></div></section>
+          <section class="workspace-panel followup-panel"><div class="panel-heading"><div><h2>Next up</h2><p>Follow-ups and feedback to check.</p></div><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#calendar-days"/></svg></div><div id="overview-attention"></div></section>
+          </div>
+          <div class="overview-column">
+          <section class="workspace-panel jobs-map-panel"><div class="panel-heading"><div><h2>Job locations</h2><p>Pickup and drop-off locations from your enquiries.</p></div><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#map-pin"/></svg></div><div class="map-selection"><label class="sr-only" for="overview-map-request">Show enquiry on map</label><select id="overview-map-request"><option value="">All open enquiries</option></select></div><div id="overview-job-map" class="overview-job-map" role="region" aria-label="Job pickup and drop-off locations"><p class="map-loading">Loading the map…</p></div><div class="map-card-footer"><div class="map-legend"><span>Pickup</span><span>Drop-off</span></div><button type="button" class="quiet-button" id="overview-map-route" disabled>Show driving route</button></div><p class="map-caption" id="overview-map-caption" role="status"></p></section>
+          <section class="workspace-panel quick-edit-panel" data-permission="content"><div class="panel-heading"><div><h2>Quick edits</h2><p>Keep customers in the loop.</p></div></div><div class="quick-edit-list"><button type="button" data-edit-section="availability"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#clock"/></svg><span><strong>Availability notice</strong><small>Add a temporary update for customers</small></span><svg class="ui-icon chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></button><button type="button" data-edit-section="contact"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#user-round"/></svg><span><strong>Contact & hours</strong><small>Update your business details</small></span><svg class="ui-icon chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></button></div></section>
+          <details class="workspace-panel activity-panel" data-permission="activity"><summary><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#clock"/></svg><span>Recent changes</span><svg class="ui-icon section-chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div id="recent-activity"></div></details>
+          </div>
+        </div>
+      </section>
+      <section id="owner-enquiries" class="owner-view" hidden>
+        <div class="workspace-panel enquiry-workspace"><div class="inbox-toolbar"><div class="search-field"><label class="sr-only" for="enquiry-search">Search enquiries</label><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#search"/></svg><input id="enquiry-search" type="search" placeholder="Search job number, name, route, or service"></div><div class="filter-field"><label class="sr-only" for="enquiry-filter">Status</label><select id="enquiry-filter"><option value="">All enquiries</option><option value="active">Active requests</option><option>New</option><option>Contacted</option><option>Quoted</option><option>Booked</option><option>Closed</option></select></div><button class="icon-button owner-refresh" type="button" aria-label="Refresh enquiries"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#refresh-cw"/></svg></button></div><details class="enquiry-filter-options"><summary>More filters<svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div class="enquiry-extra-filters"><div class="field"><label for="enquiry-from">Received from (Eastern)</label><input id="enquiry-from" type="date"></div><div class="field"><label for="enquiry-to">Received until (Eastern)</label><input id="enquiry-to" type="date"></div><div class="field"><label for="enquiry-sort">Sort by</label><select id="enquiry-sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="pickup">Upcoming pickup</option></select></div><a class="button button-outline" id="enquiry-export" href="/.netlify/functions/owner?action=export" download data-permission="export">Export CSV</a></div></details><div class="owner-columns"><div class="inbox-list-panel"><div class="list-caption"><span>REQUESTS</span><span id="enquiry-result-count"></span></div><div id="enquiry-list" class="owner-list"></div></div><div id="enquiry-detail"></div></div></div>
+      </section>
+      <section id="owner-email-view" class="owner-view" hidden>
+        <section class="workspace-panel gmail-workbench" aria-label="Gmail workspace">
+          <header class="gmail-topbar" id="gmail-topbar" hidden>
+            <form class="gmail-search" id="gmail-search" role="search" aria-label="Search Gmail" hidden>
+              <label for="gmail-search-query" class="sr-only">Search all mail</label>
+              <button type="submit" aria-label="Search mail" title="Search mail"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#search"/></svg></button>
+              <input id="gmail-search-query" type="search" maxlength="250" placeholder="Search mail" autocomplete="off">
+              <button type="button" id="gmail-clear-search" aria-label="Clear search" title="Clear search" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button>
+            </form>
+            <nav class="gmail-folders" id="gmail-folders" aria-label="Mail folders" hidden>
+              <button type="button" data-mail-folder="inbox" aria-current="page"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#inbox"/></svg>Inbox</button>
+              <button type="button" data-mail-folder="starred"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#star"/></svg>Starred</button>
+              <button type="button" data-mail-folder="sent"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#send"/></svg>Sent</button>
+              <button type="button" data-mail-folder="attachments"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#paperclip"/></svg>Attachments</button>
+              <button type="button" data-mail-folder="all"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#mails"/></svg>All mail</button>
+            </nav>
+            <div class="gmail-toolbar-actions">
+              <button class="button gmail-compose-trigger" type="button" id="gmail-compose" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#mail"/></svg><span>Compose</span></button>
+              <button class="icon-button gmail-refresh" type="button" id="gmail-refresh" aria-label="Refresh mail" title="Refresh mail" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#refresh-cw"/></svg></button>
+              <details class="gmail-account-menu" id="gmail-account-menu">
+                <summary class="gmail-account-trigger" aria-label="Gmail account settings" title="Gmail account settings">
+                  <span class="gmail-account-avatar" id="gmail-account-initial" aria-hidden="true"></span>
+                  <svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg>
+                </summary>
+                <div class="gmail-account-popover">
+                  <strong id="gmail-account-address"></strong>
+                  <span class="gmail-account-role" id="gmail-account-access"></span>
+                  <div class="gmail-image-setting" id="gmail-image-setting" hidden>
+                    <label for="gmail-automatic-images">
+                      <span>Automatic images</span>
+                      <input type="checkbox" id="gmail-automatic-images" aria-describedby="gmail-image-setting-note">
+                    </label>
+                    <p id="gmail-image-setting-note">Loads images from external servers in this browser. Senders may be able to tell when you open a message.</p>
+                  </div>
+                  <a id="gmail-inbox" href="https://mail.google.com/mail/" target="_blank" rel="noopener noreferrer">Open Gmail <svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#external-link"/></svg></a>
+                  <button id="gmail-disconnect" type="button" hidden>Disconnect Gmail</button>
+                </div>
+              </details>
+            </div>
+          </header>
+          <p id="gmail-feedback" class="email-feedback" role="status"></p>
+          <section class="gmail-setup" id="gmail-setup" aria-labelledby="gmail-heading">
+            <span class="gmail-setup-mark" aria-hidden="true"><svg class="ui-icon"><use href="/assets/admin-icons.svg#mail"/></svg></span>
+            <h2 id="gmail-heading">Connect Gmail</h2>
+            <p id="gmail-description">Checking connection…</p>
+            <p id="gmail-access-note">Link your Gmail account to get started.</p>
+            <div class="gmail-setup-actions">
+              <button id="gmail-connect" class="button" type="button" hidden>Link Google account</button>
+              <button id="gmail-enable-inbox" class="button" type="button" hidden>Enable read-only inbox</button>
+              <a id="gmail-setup-gmail" class="button button-outline" href="https://mail.google.com/mail/" target="_blank" rel="noopener noreferrer" aria-label="Open Gmail in a new tab">Open Gmail <svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#external-link"/></svg></a>
+              <button id="gmail-retry" class="quiet-button" type="button" hidden>Check again</button>
+            </div>
+          </section>
+          <div class="gmail-mailbox" id="gmail-mailbox" hidden>
+            <section class="gmail-list-panel" id="gmail-list-panel" aria-labelledby="gmail-list-heading">
+              <div class="gmail-list-heading">
+                <div class="gmail-list-title">
+                  <h2 id="gmail-list-heading">Inbox</h2>
+                  <small id="gmail-list-count" class="gmail-list-count" hidden></small>
+                </div>
+                <div class="gmail-list-filters" id="gmail-inbox-filters" role="group" aria-label="Filter inbox by read status">
+                  <button type="button" data-inbox-filter="inbox" aria-pressed="true">All</button>
+                  <button type="button" data-inbox-filter="unread" aria-pressed="false">Unread</button>
+                  <button type="button" data-inbox-filter="read" aria-pressed="false">Read</button>
+                </div>
+              </div>
+              <div class="gmail-list-scroll" id="gmail-list-scroll">
+                <p class="gmail-mail-status" id="gmail-list-status" role="status"></p>
+                <ul class="gmail-threads" id="gmail-threads"></ul>
+                <button type="button" class="button button-outline gmail-more" id="gmail-more" hidden>Load more</button>
+              </div>
+            </section>
+            <section class="gmail-reader" id="gmail-reader" aria-labelledby="gmail-thread-heading" hidden>
+                <div class="gmail-reader-tools">
+                  <button type="button" class="quiet-button gmail-back" id="gmail-back"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg> Back to list</button>
+                  <div class="gmail-reader-actions">
+                    <div class="gmail-thread-navigation" role="group" aria-label="Navigate conversations">
+                      <button type="button" class="icon-button" id="gmail-previous-thread" aria-label="Previous conversation" title="Previous conversation" disabled><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></button>
+                      <button type="button" class="icon-button" id="gmail-next-thread" aria-label="Next conversation" title="Next conversation" disabled><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></button>
+                    </div>
+                    <a id="gmail-open-thread" class="quiet-button gmail-thread-link" target="_blank" rel="noopener noreferrer" aria-label="Open conversation in Gmail in a new tab" hidden>Open in Gmail <svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#external-link"/></svg></a>
+                  </div>
+                </div>
+                <div class="gmail-conversation">
+                  <h2 id="gmail-thread-heading" tabindex="-1"></h2>
+                  <div id="gmail-messages"></div>
+                </div>
+            </section>
+          </div>
+          <dialog id="gmail-compose-dialog" class="gmail-compose-dialog" aria-labelledby="gmail-compose-title">
+            <header class="gmail-compose-header">
+              <h2 id="gmail-compose-title">New message</h2>
+              <button type="button" class="icon-button" id="gmail-compose-close" aria-label="Close composer"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button>
+            </header>
+            <form id="gmail-compose-form" method="post">
+              <fieldset id="gmail-compose-fields" class="gmail-compose-fields">
+                <div class="gmail-compose-line"><span>From</span><span id="gmail-compose-from"></span></div>
+                <div class="gmail-compose-line">
+                  <label for="gmail-compose-to">To</label>
+                  <input id="gmail-compose-to" name="to" type="text" inputmode="email" maxlength="2000" autocomplete="off" spellcheck="false" aria-describedby="gmail-compose-address-help">
+                  <button type="button" id="gmail-compose-copy" class="quiet-button" aria-controls="gmail-compose-copy-fields" aria-expanded="false">Cc/Bcc</button>
+                </div>
+                <span id="gmail-compose-address-help" class="sr-only">Separate multiple email addresses with commas.</span>
+                <div id="gmail-compose-copy-fields" hidden>
+                  <div class="gmail-compose-line"><label for="gmail-compose-cc">Cc</label><input id="gmail-compose-cc" name="cc" type="text" inputmode="email" maxlength="2000" autocomplete="off" spellcheck="false"></div>
+                  <div class="gmail-compose-line"><label for="gmail-compose-bcc">Bcc</label><input id="gmail-compose-bcc" name="bcc" type="text" inputmode="email" maxlength="2000" autocomplete="off" spellcheck="false"></div>
+                </div>
+                <div class="gmail-compose-line"><label for="gmail-compose-subject">Subject</label><input id="gmail-compose-subject" name="subject" type="text" maxlength="300" autocomplete="off"></div>
+                <label for="gmail-compose-text" class="sr-only">Message</label>
+                <textarea id="gmail-compose-text" name="text" maxlength="60000" placeholder="Write your message"></textarea>
+                <input id="gmail-compose-file" type="file" multiple hidden>
+                <ul id="gmail-compose-attachments" class="gmail-compose-attachments" aria-label="Attached files" hidden></ul>
+              </fieldset>
+              <p id="gmail-compose-status" class="gmail-compose-status" role="status"></p>
+              <p id="gmail-compose-draft-status" class="gmail-draft-status" role="status"></p>
+              <footer class="gmail-compose-footer">
+                <button type="submit" class="button" id="gmail-compose-send" disabled>Send</button>
+                <button type="button" class="icon-button gmail-compose-attach" id="gmail-compose-attach" aria-label="Attach files, up to 3 MB total" title="Attach files · 3 MB total"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#paperclip"/></svg></button>
+                <span class="gmail-compose-limit">3 MB total</span>
+                <button type="button" class="quiet-button gmail-compose-save" id="gmail-compose-save-draft" hidden>Save draft</button>
+                <button type="button" class="quiet-button gmail-compose-discard" id="gmail-compose-discard">Discard</button>
+              </footer>
+            </form>
+          </dialog>
+        </section>
+      </section>
+      <section id="owner-reviews" class="owner-view" hidden>
+        <div class="section-toolbar"><p class="owner-help">Preview customer feedback before publishing.</p><div class="toolbar-actions"><label class="sr-only" for="review-filter">Filter reviews</label><select id="review-filter"><option value="">All reviews</option><option value="pending">Awaiting review</option><option value="Published">Published</option><option value="private">Private feedback</option><option value="Spam">Spam</option></select><button class="icon-button owner-refresh" type="button" aria-label="Refresh reviews"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#refresh-cw"/></svg></button></div></div><div id="owner-review-list" class="owner-review-list"></div>
+      </section>
+      <section id="owner-website" class="owner-view" hidden>
+        <div class="website-editor-layout"><form id="owner-content-form" class="owner-content-form" novalidate>
+          <div class="editor-caption"><span>WEBSITE SECTIONS</span><span>Choose a section to edit</span></div>
+          <details class="editor-section" name="website-sections" data-section="opening"><summary><span class="section-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#panels-top-left"/></svg></span><span class="section-label"><strong>Opening screen</strong><small data-section-summary="opening">Headline, introduction & coverage</small></span><svg class="ui-icon section-chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div class="editor-section-body"><div id="content-opening-fields" class="form-grid"></div></div></details>
+          <details class="editor-section" name="website-sections" data-section="contact"><summary><span class="section-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#user-round"/></svg></span><span class="section-label"><strong>Business & contact</strong><small data-section-summary="contact">Phone, email, location & hours</small></span><svg class="ui-icon section-chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div class="editor-section-body"><div id="content-contact-fields" class="form-grid"></div></div></details>
+          <details class="editor-section" name="website-sections" data-section="availability"><summary><span class="section-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#clock"/></svg></span><span class="section-label"><strong>Availability notice</strong><small data-section-summary="availability">No temporary notice</small></span><svg class="ui-icon section-chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div class="editor-section-body"><p class="field-hint">Show a short update. It disappears at the expiry you choose.</p><div id="content-availability-fields" class="form-grid"></div></div></details>
+          <details class="editor-section" name="website-sections" data-section="services"><summary><span class="section-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#truck"/></svg></span><span class="section-label"><strong>Services</strong><small data-section-summary="services">3 services</small></span><svg class="ui-icon section-chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div class="editor-section-body"><div id="content-service-fields"></div></div></details>
+          <details class="editor-section" name="website-sections" data-section="faq"><summary><span class="section-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#message-square"/></svg></span><span class="section-label"><strong>Frequently asked questions</strong><small data-section-summary="faq">Answers customers need before booking</small></span><svg class="ui-icon section-chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div class="editor-section-body"><div id="content-faq-fields"></div><button type="button" class="button button-outline" id="content-add-faq">Add question</button></div></details>
+          <details class="editor-section" name="website-sections" data-section="gallery"><summary><span class="section-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#image"/></svg></span><span class="section-label"><strong>Job photos</strong><small data-section-summary="gallery">2 photos & captions</small></span><span class="section-thumbnails" id="gallery-summary-thumbs"></span><svg class="ui-icon section-chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div class="editor-section-body"><div id="content-gallery-fields" class="form-grid"></div></div></details>
+        </form><aside class="draft-preview-card workspace-panel"><div class="preview-card-header"><div><span class="owner-eyebrow">CUSTOMER VIEW</span><h2 id="section-preview-title">Opening screen</h2></div><span class="draft-marker">Draft preview</span></div><div class="preview-browser-bar"><span></span><span></span><span></span><small>RS on the Go</small></div><div id="section-preview"></div><div class="preview-card-footer"><p>Updates as you type. Publish when you’re ready.</p><button type="button" class="button button-outline" id="content-preview"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#eye"/></svg>Full website preview</button></div></aside></div>
+        <div class="owner-publish"><div><span class="publish-status-dot"></span><span id="content-dirty" role="status">All changes are published.</span></div><div class="publish-actions"><button type="button" class="quiet-button" id="website-versions">Version history</button><button type="button" class="quiet-button mobile-preview-action" id="content-preview-mobile"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#eye"/></svg> Preview</button><button type="button" class="quiet-button" id="content-discard" disabled>Discard changes</button><button type="submit" form="owner-content-form" class="button" id="content-publish" disabled><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#check"/></svg>Publish changes</button></div></div>
+      </section>
+      <section id="owner-settings" class="owner-view" hidden>
+        <form id="profile-form" class="settings-form">
+          <fieldset id="settings-fields" class="settings-fields"><legend class="sr-only">Your personal settings</legend>
+            <section class="workspace-panel settings-profile" aria-labelledby="profile-title">
+              <div class="settings-card-heading"><span class="settings-card-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#user-round"/></svg></span><div><h2 id="profile-title">Your profile</h2><p>A little more you. Personalize your workspace.</p></div></div>
+              <div class="settings-card-body">
+                <div class="profile-photo-picker"><div id="profile-photo-preview" class="profile-photo-preview">RS</div><div><button type="button" class="button button-outline" id="profile-photo-pick">Change photo</button><input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden><button type="button" class="quiet-button" id="profile-remove-photo">Remove photo</button><p class="field-hint">JPG, PNG, or WebP · up to 5 MB</p></div></div>
+                <div class="field"><label for="profile-display-name">Display name</label><input id="profile-display-name" name="displayName" maxlength="60" required autocomplete="nickname" placeholder="Your name"></div>
+                <div class="field"><label for="profile-job-title">Job title <span class="settings-optional">(optional)</span></label><input id="profile-job-title" name="jobTitle" maxlength="80" autocomplete="organization-title" placeholder="For example, Owner / Operator"></div>
+                <div class="field"><label for="profile-phone">Phone <span class="settings-optional">(optional)</span></label><input id="profile-phone" name="phone" type="tel" maxlength="40" autocomplete="tel" placeholder="Your contact number"></div>
+                <p class="settings-private-note">Your photo and personal details stay inside this workspace.</p>
+                <div class="settings-account"><h3>Account information</h3><div class="profile-account-details"><span>Sign-in email</span><strong id="profile-email"></strong><span>Access</span><strong id="profile-role"></strong></div><p class="field-hint">Your sign-in email and access are managed through Netlify Identity.</p><details class="profile-access-note"><summary>About your access</summary><p id="profile-permission-note"></p></details></div>
+              </div>
+            </section>
+            <section class="workspace-panel settings-time" aria-labelledby="settings-time-title">
+              <div class="settings-card-heading"><span class="settings-card-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#clock"/></svg></span><div><h2 id="settings-time-title">Date &amp; time</h2><p>Make the dashboard work on your time.</p></div></div>
+              <div class="settings-card-body">
+                <div class="settings-clock-preview"><span>YOUR CLOCK</span><time id="settings-clock">--:--</time><p id="settings-clock-date"></p><small id="settings-clock-zone"></small></div>
+                <div class="field"><label for="profile-timezone">Timezone</label><select id="profile-timezone" name="timeZone" required></select><button type="button" class="quiet-button settings-device-time" id="settings-device-time">Use my device timezone</button></div>
+                <div class="field"><label for="profile-time-format">Clock format</label><select id="profile-time-format" name="timeFormat"><option value="12h">12-hour · 3:30 PM</option><option value="24h">24-hour · 15:30</option></select></div>
+                <div class="settings-time-note"><strong>For your account</strong><p>Your timezone applies to the clock and received or updated timestamps. Pickup schedules, reminders, and received-date filters follow Eastern Time.</p></div>
+              </div>
+            </section>
+            <section class="workspace-panel settings-themes" aria-labelledby="workspace-theme-title">
+              <div class="settings-card-heading"><span class="settings-card-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#settings-2"/></svg></span><div><h2 id="workspace-theme-title">Color theme</h2><p>A personal accent for your workspace.</p></div></div>
+              <div class="settings-card-body"><div id="workspace-themes"></div><p class="workspace-control-hint">Choose a theme, then Save changes to apply it to your admin workspace.</p></div>
+            </section>
+            <section class="workspace-panel settings-workspace" aria-labelledby="workspace-appearance-title">
+              <div class="settings-card-heading"><span class="settings-card-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#layout-dashboard"/></svg></span><div><h2 id="workspace-appearance-title">Your workspace</h2><p>One preset controls layout, text, and spacing.</p></div></div>
+              <div class="settings-card-body"><div id="workspace-customization"></div><p class="workspace-control-hint">Mobile uses one fixed layout. Presets and panel order apply only on desktop.</p></div>
+            </section>
+          </fieldset>
+          <div class="settings-save-bar"><div><strong id="settings-save-label">Your settings are up to date.</strong><p id="profile-status" role="status" aria-live="polite"></p></div><div><button type="button" class="quiet-button" id="profile-discard" disabled>Discard changes</button><button type="submit" class="button" id="profile-save" disabled>Save changes</button></div></div>
+        </form>
+      </section>
+    </div>
+  </main>
+  <dialog id="workspace-assistant" class="assistant-dialog" aria-labelledby="assistant-title">
+    <header class="assistant-header">
+      <span class="assistant-mark"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#message-square"/></svg></span>
+      <div><h2 id="assistant-title" tabindex="-1">Workspace assistant</h2><p>RS on the Go website and admin</p></div>
+      <div class="assistant-header-actions">
+        <button type="button" class="quiet-button" id="assistant-reset">New chat</button>
+        <button type="button" class="icon-button" id="assistant-close" aria-label="Close workspace assistant"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button>
+      </div>
+    </header>
+    <div class="assistant-thread" id="assistant-thread" role="log" aria-label="Assistant conversation" aria-relevant="additions" tabindex="0">
+      <p class="assistant-welcome">Ask me about the website or how to do something in admin.</p>
+    </div>
+    <div class="assistant-compose">
+      <form id="assistant-form">
+        <label class="sr-only" for="assistant-question">Ask about the workspace</label>
+        <input id="assistant-question" name="question" type="text" autocomplete="off" maxlength="400" placeholder="Ask about the workspace…" required>
+        <button type="submit" class="button" id="assistant-send">Send</button>
+      </form>
+      <p class="assistant-caption">AI replies via Groq. Leave out customer details and passwords.</p>
+      <p class="assistant-caption" id="assistant-status" role="status"></p>
+    </div>
+  </dialog>
+  <dialog class="owner-preview-dialog" id="content-preview-dialog" aria-labelledby="full-preview-title"><header class="preview-dialog-header"><div><h2 id="full-preview-title">Website preview</h2><p>Unpublished changes · Only you can see this preview</p></div><div class="device-controls" role="group" aria-label="Preview size"><button type="button" class="icon-button" data-preview-device="desktop" aria-pressed="true" aria-label="Desktop preview"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#monitor"/></svg></button><button type="button" class="icon-button" data-preview-device="mobile" aria-pressed="false" aria-label="Mobile preview"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#smartphone"/></svg></button></div><button type="button" class="icon-button" id="content-preview-close" aria-label="Close website preview"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button></header><div class="full-preview-stage"><iframe title="Preview of your website changes" id="content-preview-frame"></iframe></div></dialog>
+  <dialog class="owner-small-dialog" id="workspace-recovery" aria-labelledby="recovery-title">
+    <div class="review-dialog-heading"><h2 id="recovery-title">Version history</h2><button type="button" class="icon-button" data-close-dialog="workspace-recovery" aria-label="Close version history"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button></div>
+    <div class="field"><label for="recovery-version">Previous version</label><select id="recovery-version"></select></div>
+    <dl id="recovery-preview" class="recovery-preview"></dl>
+    <p class="field-hint" id="recovery-effect"></p>
+    <p role="status" id="recovery-status" class="field-hint"></p>
+    <button type="button" class="button" id="recovery-restore" disabled>Restore this version</button>
+  </dialog>
+  <dialog class="owner-small-dialog" id="workspace-idle-dialog" aria-labelledby="workspace-idle-title">
+    <div class="review-dialog-heading"><h2 id="workspace-idle-title">Still working?</h2></div>
+    <p class="field-hint">Your session is about to end. Stay signed in to keep any unsaved edits.</p>
+    <p role="status" class="field-hint"></p>
+    <button type="button" class="button" data-keep-session>Stay signed in</button>
+  </dialog>
+  <dialog class="review-preview-dialog" id="review-preview-dialog" aria-labelledby="review-preview-title"><div class="review-dialog-heading"><div><p class="owner-eyebrow">CUSTOMER VIEW</p><h2 id="review-preview-title">Review card preview</h2></div><button type="button" class="icon-button" id="review-preview-close" aria-label="Close review preview"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button></div><div id="review-preview-body"></div><p class="field-hint">Previewing does not publish this review.</p></dialog>
+  <dialog class="owner-small-dialog" id="reminder-dialog" aria-labelledby="reminder-title"><div class="review-dialog-heading"><div><p class="owner-eyebrow">YOUR WORKSPACE</p><h2 id="reminder-title">Add reminder</h2></div><button type="button" class="icon-button" data-close-dialog="reminder-dialog" aria-label="Close reminder"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button></div><form id="reminder-form"><div class="field"><label for="reminder-text">What needs doing?</label><input id="reminder-text" name="title" maxlength="120" required placeholder="For example, check trailer tires"></div><div class="field"><label for="reminder-date">Date</label><input id="reminder-date" name="date" type="date" required></div><label class="checkbox" id="reminder-done-field" hidden><input type="checkbox" name="done">Completed</label><p class="field-hint">A reminder in this workspace. No message will be sent.</p><p role="status" id="reminder-status" class="field-error"></p><button type="submit" class="button">Save reminder</button></form></dialog>
+  <dialog class="website-image-dialog" id="image-picker-dialog" aria-labelledby="image-picker-title">
+    <form id="image-picker-form" class="image-picker-form">
+      <header class="image-picker-heading"><div><p class="owner-eyebrow">WEBSITE IMAGES</p><h2 id="image-picker-title">Choose an image</h2><p>Preview your photo before adding it to the page.</p></div><button type="button" class="icon-button" data-close-image-picker aria-label="Close image picker"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button></header>
+      <div class="image-picker-body"><div class="image-picker-source"><div class="image-picker-tabs" role="tablist" aria-label="Image source"><button type="button" role="tab" data-media-tab="upload" aria-selected="true" aria-controls="image-picker-upload-panel" id="image-upload-tab">Upload</button><button type="button" role="tab" data-media-tab="library" aria-selected="false" aria-controls="image-picker-library-panel" tabindex="-1" id="image-library-tab">Image library</button></div>
+        <div id="image-picker-upload-panel" role="tabpanel" aria-labelledby="image-upload-tab"><div class="image-drop-zone" id="image-picker-drop"><span class="image-drop-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#image"/></svg></span><h3 class="media-desktop-hint">Drag & drop your photo here</h3><h3 class="media-mobile-hint">Choose a photo from your device</h3><p class="media-desktop-hint">or choose a file from your device</p><button type="button" class="button button-outline" id="image-picker-browse">Browse files</button><input type="file" id="website-image-file" accept="image/jpeg,image/png,image/webp" hidden></div><div class="image-format-note"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#image"/></svg><div><strong>JPG, PNG, or WebP</strong><p>Up to 12 MB. Photos are resized for the web.</p></div></div></div>
+        <div id="image-picker-library-panel" role="tabpanel" aria-labelledby="image-library-tab" hidden><div id="image-picker-library"></div><p id="image-library-status" role="status" class="field-hint"></p><button type="button" class="quiet-button" id="image-library-more" hidden>Load more images</button><button type="button" class="quiet-button" id="image-library-retry" hidden>Try again</button></div>
+      </div><aside class="image-picker-settings"><p class="image-preview-label">PAGE PREVIEW</p><div class="image-picker-preview" id="image-picker-preview"></div><p class="image-file-info" id="image-picker-file-info"></p><p class="field-hint" id="image-picker-resolution"></p><div class="field"><label for="image-picker-alt">Image description</label><input id="image-picker-alt" maxlength="180" required><p class="field-hint">Describe what is in the photo for screen readers.</p></div><div class="field"><label for="image-picker-position">Image alignment</label><select id="image-picker-position"></select></div></aside></div>
+      <footer class="image-picker-footer"><div class="image-picker-feedback"><progress id="image-picker-progress" aria-label="Processing image" hidden></progress><p id="image-picker-status" role="status"></p><p class="field-hint">Use images you have permission to publish. Changes stay in your draft until you publish.</p></div><div class="image-picker-buttons"><button type="button" class="button button-outline" data-close-image-picker>Cancel</button><button type="submit" class="button" id="image-picker-use">Use image</button></div></footer>
+    </form>
+  </dialog>
+  <dialog class="owner-small-dialog login-reset-dialog" id="owner-reset-dialog" aria-labelledby="owner-reset-title">
+    <div class="review-dialog-heading"><div><h2 id="owner-reset-title">Reset your password</h2><p>Enter your account email or username.</p></div><button type="button" class="icon-button" id="owner-reset-close" aria-label="Close password reset">×</button></div>
+    <form id="owner-reset-form" method="post" action="/admin/"><div class="field"><label for="owner-reset-identifier">Email or username</label><input id="owner-reset-identifier" name="identifier" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254" required></div><p id="owner-reset-status" class="login-status" role="status" aria-live="polite" hidden></p><button type="submit" class="login-submit">Send reset link</button></form>
+  </dialog>
+</body>
+</html>

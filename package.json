@@ -1,0 +1,28 @@
+{
+  "name": "rs-on-the-go",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "npm run typecheck && node scripts/build.mjs",
+    "dev": "npm run build && netlify dev --offline --no-open",
+    "check": "npm run typecheck && node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@maplibre/maplibre-gl-leaflet": "0.1.4",
+    "@netlify/blobs": "11.1.9",
+    "@netlify/identity": "2.0.1",
+    "html-to-text": "10.0.1",
+    "htmlparser2": "10.1.0",
+    "leaflet": "1.9.4",
+    "maplibre-gl": "6.19.0",
+    "nodemailer": "10.6.1",
+    "sharp": "0.35.5"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "jsdom": "^31.0.1",
+    "netlify-cli": "27.19.0",
+    "typescript": "5.9.3"
+  }
+}

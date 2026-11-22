@@ -1,0 +1,11 @@
+node_modules/
+.netlify/
+.env
+.env.*
+!.env.example
+public/assets/owner-access.bundle.js
+public/assets/admin.bundle.js
+public/assets/map-tools.bundle.js
+public/assets/map-tools.css
+public/assets/maplibre-gl-worker.mjs
+public/assets/map-images/

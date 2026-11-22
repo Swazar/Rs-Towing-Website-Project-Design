@@ -1,0 +1,82 @@
+.owner-login-screen { background:var(--paper); }
+.owner-login-screen > .owner-header { display:none; }
+.owner-login-screen .owner-main { display:grid; align-items:center; width:100%; min-height:100svh; margin:0; padding:40px; }
+.owner-login-screen .signin-panel { display:grid; grid-template-columns:1.45fr 1fr; width:min(1120px,100%); max-width:none; min-height:680px; margin:auto; background:var(--white); border-radius:12px; overflow:hidden; box-shadow:0 16px 70px #24232709; }
+.login-welcome { position:relative; isolation:isolate; display:flex; flex-direction:column; justify-content:center; padding:76px 68px 36px 92px; background:linear-gradient(165deg,#d12631 0%,var(--brand) 41%,#650c15 100%); color:var(--white); overflow:hidden; }
+.login-contours { position:absolute; inset:0; width:100%; height:100%; z-index:-1; color:#650c15; opacity:.34; stroke-width:1.4; }
+.login-welcome-copy { margin:auto 0; padding:24px 0 50px; }
+.login-welcome h2 { font-size:clamp(2.15rem,3.6vw,3.1rem); font-weight:750; line-height:1.16; letter-spacing:-.035em; margin:0 0 28px; }
+.login-welcome-copy p { font-size:1rem; line-height:1.5; color:#fff0f1; max-width:350px; }
+.login-copyright { color:#f2c8cc; font-size:.8rem; line-height:1.5; }
+.login-form-side { padding:65px 54px 30px; display:flex; flex-direction:column; min-width:0; }
+.login-brand { display:block; color:var(--ink); font-size:1.2rem; line-height:1.3; font-weight:750; letter-spacing:-.035em; text-decoration:none; align-self:start; }
+.login-brand span { display:block; font-size:.65rem; letter-spacing:.13em; font-weight:500; color:#78757b; margin-top:6px; }
+.login-form-content { width:100%; margin:auto 0; padding:62px 0 50px; }
+.signin-panel #login-title { color:var(--ink); font-size:1.8rem; font-weight:750; letter-spacing:-.035em; line-height:1.2; margin:0 0 10px; }
+.login-intro { color:var(--muted); font-size:.9rem; line-height:1.5; margin-bottom:30px; }
+.login-form { margin:0; padding:0; border:0; background:transparent; }
+.admin-page .login-field { margin:0 0 23px; }
+.admin-page .login-field label { display:block; color:var(--muted); font-size:.875rem; font-weight:500; margin-bottom:3px; }
+.admin-page .login-field input { width:100%; min-height:44px; border:0; border-bottom:1px solid var(--line); border-radius:0; padding:7px 0 9px; font-size:.94rem; background:transparent; color:var(--ink); box-shadow:none; }
+.admin-page .login-field input::placeholder { font-size:.85rem; color:#929096; opacity:1; }
+.admin-page .login-field input:focus { outline:0; border-color:var(--brand); box-shadow:0 1px 0 var(--brand); }
+.login-password { position:relative; }
+.admin-page .login-password input { padding-right:48px; }
+.login-password-toggle { position:absolute; right:-5px; top:0; min-height:44px; padding:5px; border:0; background:transparent; color:var(--muted); font-size:.8rem; cursor:pointer; }
+.login-submit,.login-google { display:flex; width:100%; align-items:center; justify-content:center; gap:12px; min-height:45px; border-radius:5px; font-size:.875rem; font-weight:600; cursor:pointer; }
+.login-submit { border:1px solid var(--brand); background:var(--brand); color:var(--white); padding:10px 15px; margin-top:28px; }
+.login-submit:hover { background:var(--brand-hover); border-color:var(--brand-hover); }
+.login-google { margin-top:12px; border:1px solid var(--line); padding:10px 15px; background:var(--white); color:var(--ink); }
+.login-google:hover { background:var(--paper); border-color:#aaa6ad; }
+.login-google svg { flex:none; }
+.login-recovery { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px; color:#827e85; font-size:.8rem; margin:13px 0 0; }
+.login-recovery button { border:0; background:none; color:var(--brand); text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:10px 0; min-height:40px; font-size:inherit; font-weight:600; }
+.login-recovery button:hover,.login-preview-note a:hover { color:var(--brand-hover); }
+.login-foot { display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; color:#85818a; font-size:.75rem; }
+.login-foot a { color:var(--muted); }
+.login-status { font-size:.875rem; line-height:1.5; padding:12px 14px; margin:15px 0 0; background:#f9edef; color:#84242e; border-radius:5px; overflow-wrap:anywhere; }
+.login-status[data-tone="error"] { background:#fff1f1; color:#9e2735; }
+.login-preview-note { color:#76717a; font-size:.8rem; margin-top:20px; line-height:1.65; }
+.login-preview-note a { color:var(--brand); }
+.login-reset-dialog { width:min(450px,calc(100% - 32px)); padding:26px; }
+.login-reset-dialog h2 { font-size:1.4rem; }
+.login-reset-dialog .review-dialog-heading p { font-size:.9rem; color:var(--muted); margin-top:12px; }
+.login-reset-dialog input { width:100%; }
+.login-reset-dialog::backdrop { background:#24232766; backdrop-filter:blur(5px); }
+.owner-login-screen :focus-visible,.login-reset-dialog :focus-visible { outline:2px solid var(--brand); outline-offset:4px; }
+@media (min-width:651px) and (max-height:800px) {
+  .owner-login-screen .owner-main { padding:22px; }
+  .owner-login-screen .signin-panel { min-height:620px; }
+  .login-form-side { padding:40px 44px 24px; }
+  .login-form-content { padding:40px 0 22px; }
+  .login-intro { margin-bottom:22px; }
+  .admin-page .login-field { margin-bottom:18px; }
+  .login-submit { margin-top:22px; }
+  .login-preview-note { margin-top:12px; }
+}
+@media (max-width:1000px) {
+  .owner-login-screen .owner-main { padding:28px; }
+  .owner-login-screen .signin-panel { grid-template-columns:1.15fr 1fr; min-height:640px; }
+  .login-welcome { padding:55px 36px 30px 48px; }
+  .login-form-side { padding:50px 35px 25px; }
+  .login-desktop-break { display:none; }
+}
+@media (max-width:650px) {
+  .owner-login-screen .owner-main { padding:18px; align-items:start; }
+  .owner-login-screen .signin-panel { display:flex; flex-direction:column; min-height:0; border-radius:10px; }
+  .login-welcome { padding:32px; }
+  .login-welcome-copy { padding:0; }
+  .login-welcome h2 { font-size:2rem; margin-bottom:15px; }
+  .login-welcome-copy p { font-size:.9rem; }
+  .login-welcome-copy p br { display:none; }
+  .login-copyright { display:none; }
+  .login-form-side { padding:30px 28px 24px; }
+  .login-brand { font-size:1.05rem; }
+  .login-form-content { padding:32px 0 26px; }
+  .signin-panel #login-title { font-size:1.65rem; }
+  .admin-page .login-field input { font-size:1rem; }
+  .login-foot { font-size:.75rem; }
+}
+@media (prefers-reduced-motion:no-preference) {
+  .login-submit,.login-google { transition:background .15s,border-color .15s; }
+}

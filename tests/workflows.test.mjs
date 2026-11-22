@@ -1,0 +1,152 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import test from 'node:test';
+import { JSDOM } from 'jsdom';
+import { defaults } from '../public/assets/business-defaults.js';
+import { validateSettings, publicReview } from '../netlify/lib/validation.mjs';
+import { isLocalPreview, sameOrigin } from '../netlify/lib/store.mjs';
+
+test('only consented, published review fields reach the public response', () => {
+  const submission = { created_at: '2026-11-17T12:00:00Z', data: {
+    first_name: 'Jamie', email: 'private@example.com', review: 'Original feedback', rating: '4', 'publish-permission': 'yes',
+  } };
+  assert.equal(publicReview(submission, { publication: 'Unpublished' }), null);
+  assert.deepEqual(publicReview(submission, { publication: 'Published' }), {
+    name: 'Jamie', quote: 'Original feedback', rating: 4, date: '2026-11-17',
+  });
+  submission.data['publish-permission'] = '';
+  assert.equal(publicReview(submission, { publication: 'Published' }), null);
+});
+
+test('website edits reject unsafe contact URLs, arbitrary photos, and notices without expiry', () => {
+  assert.equal(validateSettings(structuredClone(defaults)).phone, defaults.phone);
+  const unsafe = structuredClone(defaults);
+  unsafe.phone = 'javascript:alert(1)';
+  assert.throws(() => validateSettings(unsafe), /phone/);
+  const photo = structuredClone(defaults);
+  photo.gallery[0].src = 'https://untrusted.example/image';
+  assert.throws(() => validateSettings(photo), /gallery photo/);
+  const notice = structuredClone(defaults);
+  notice.availabilityMessage = 'Limited availability this week';
+  assert.throws(() => validateSettings(notice), /expiry/);
+});
+
+test('local owner bypass cannot activate on a production hostname and mutations require the same origin', () => {
+  const previous = process.env.NETLIFY_DEV;
+  process.env.NETLIFY_DEV = 'true';
+  assert.equal(isLocalPreview(new Request('https://rs.example/admin')), false);
+  assert.equal(isLocalPreview(new Request('http://localhost:8888/admin')), true);
+  assert.throws(() => sameOrigin(new Request('http://localhost:8888', { headers: { Origin: 'https://evil.example' } })));
+  assert.doesNotThrow(() => sameOrigin(new Request('http://localhost:8888', { headers: { Origin: 'http://localhost:8888' } })));
+  if (previous === undefined) delete process.env.NETLIFY_DEV; else process.env.NETLIFY_DEV = previous;
+});
+
+test('a manual roadside quote survives refresh, returns from summary edits, and preserves answers on a failed send', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const catalog = JSON.parse(await readFile(new URL('../public/assets/us-places.json', import.meta.url), 'utf8'));
+  let submitted;
+  globalThis.fetch = async (url, options) => {
+    if (url.endsWith('site-content')) return Response.json({ settings: defaults, reviews: [], localPreview: true });
+    if (url.endsWith('us-places.json')) return Response.json(catalog);
+    if (url.endsWith('local-submission')) {
+      submitted = new URLSearchParams(options.body);
+      return new Response(null, { status: 503 });
+    }
+    throw new Error('Unexpected test request ' + url);
+  };
+  function mount(draft) {
+    const dom = new JSDOM(html, { url: 'http://localhost:8888/', pretendToBeVisual: true });
+    for (const key of ['window', 'document', 'Event', 'Option', 'FormData', 'sessionStorage', 'location']) globalThis[key] = dom.window[key];
+    dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+    dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; this.dispatchEvent(new Event('close')); };
+    Object.defineProperty(globalThis, 'navigator', { value: {}, configurable: true });
+    if (draft) sessionStorage.setItem('rs-quote-draft-v1', draft);
+    return dom;
+  }
+  let dom = mount();
+  const { enhanceQuoteForm } = await import('../public/assets/quote-form.js');
+  enhanceQuoteForm();
+  const settle = () => new Promise(resolve => setTimeout(resolve, 25));
+  await settle();
+  let form = document.forms['quote-request'];
+  const input = (name, value) => {
+    form.elements[name].value = value;
+    form.elements[name].dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  input('pickup', 'Charlotte, NC');
+  input('dropoff', 'Newton, NC');
+  assert.equal(document.querySelectorAll('.route-mode-toggle').length, 1);
+  document.querySelector('.route-mode-toggle').click();
+  assert.equal(document.querySelector('#automatic-locations').hidden, true);
+  assert.equal(document.querySelector('#pickup-manual').hidden, false);
+  assert.equal(document.querySelector('#dropoff-manual').hidden, false);
+  input('pickup_street', 'I-85 exit 40, near the service station');
+  input('pickup_city', 'Charlotte'); input('pickup_state', 'NC');
+  document.querySelector('.route-mode-toggle').click();
+  assert.equal(document.querySelector('#automatic-locations').hidden, false);
+  assert.equal(document.querySelector('#pickup-manual').hidden, true);
+  assert.equal(document.querySelector('#dropoff-manual').hidden, true);
+  assert.equal(form.elements.pickup.value, 'Charlotte, NC');
+  assert.equal(form.elements.dropoff.value, 'Newton, NC');
+  document.querySelector('.route-mode-toggle').click();
+  assert.equal(form.elements.pickup_street.value, 'I-85 exit 40, near the service station');
+  form.elements.dropoff_undecided.checked = true;
+  form.elements.dropoff_undecided.dispatchEvent(new Event('change', { bubbles: true }));
+  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  assert.match(document.querySelector('.quote-progress-label').textContent, /Step 2/);
+  input('service', 'Vehicle towing or transport');
+  input('pickup_timing', 'Specific date');
+  assert.equal(form.elements.pickup_date.required, true);
+  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  assert.match(document.querySelector('.quote-progress-label').textContent, /Step 2/);
+  input('pickup_date', '2099-12-01');
+  input('details', 'Test vehicle will not start.');
+  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  input('name', 'Local test');
+  input('phone', '202-555-0142');
+  assert.match(document.querySelector('#quote-summary-details').textContent, /I-85 exit 40/);
+  const draft = sessionStorage.getItem('rs-quote-draft-v1');
+  dom.window.close(); dom = mount(draft);
+  enhanceQuoteForm(); await settle(); form = document.forms['quote-request'];
+  assert.equal(form.elements.name.value, 'Local test');
+  assert.equal(form.elements.pickup_street.value, 'I-85 exit 40, near the service station');
+  assert.match(document.querySelector('.quote-progress-label').textContent, /Step 3/);
+  document.querySelector('[aria-label="Change timing"]').click();
+  assert.match(document.querySelector('.quote-progress-label').textContent, /Step 2/);
+  input('pickup_timing', 'Flexible');
+  assert.equal(form.elements.pickup_date.disabled, true);
+  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  assert.match(document.querySelector('.quote-progress-label').textContent, /Step 3/);
+  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  await settle();
+  assert.equal(submitted.get('pickup_timing'), 'Flexible');
+  assert.equal(submitted.has('pickup_date'), false);
+  assert.equal(submitted.get('dropoff'), 'Unsure');
+  assert.equal(submitted.get('pickup_accuracy'), 'Manual location — owner confirmation needed');
+  assert.match(document.querySelector('.submit-status').textContent, /could not be confirmed/);
+  assert.equal(form.elements.name.value, 'Local test');
+  assert.ok(sessionStorage.getItem('rs-quote-draft-v1'));
+  document.querySelector('.quote-reset').click();
+  assert.equal(form.elements.name.value, '');
+  assert.equal(form.elements.pickup.readOnly, false);
+  assert.equal(form.elements.pickup.value, '');
+  assert.equal(form.elements.dropoff.value, '');
+  input('pickup', 'Charlotte, NC'); input('dropoff', 'Newton, NC');
+  document.querySelector('.route-mode-toggle').click();
+  input('dropoff_street', '100 Example Street');
+  input('dropoff_city', 'Charlotte'); input('dropoff_state', 'NC');
+  form.elements.dropoff_undecided.checked = true;
+  form.elements.dropoff_undecided.dispatchEvent(new Event('change', { bubbles: true }));
+  document.querySelector('.route-mode-toggle').click();
+  form.elements.dropoff_undecided.checked = false;
+  form.elements.dropoff_undecided.dispatchEvent(new Event('change', { bubbles: true }));
+  assert.equal(form.elements.dropoff.value, 'Newton, NC');
+  form.elements.dropoff_undecided.checked = true;
+  form.elements.dropoff_undecided.dispatchEvent(new Event('change', { bubbles: true }));
+  document.querySelector('.route-mode-toggle').click();
+  document.querySelector('.route-mode-toggle').click();
+  form.elements.dropoff_undecided.checked = false;
+  form.elements.dropoff_undecided.dispatchEvent(new Event('change', { bubbles: true }));
+  assert.equal(form.elements.dropoff.value, 'Newton, NC');
+  dom.window.close();
+});

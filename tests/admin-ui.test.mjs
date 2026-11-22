@@ -1,0 +1,135 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import test from 'node:test';
+import { JSDOM } from 'jsdom';
+import { defaults } from '../public/assets/business-defaults.js';
+
+test('admin sections hide fields, preview drafts, reveal invalid fields, and preserve enquiry notes', async () => {
+  const html = await readFile(new URL('../public/admin/index.html', import.meta.url), 'utf8');
+  const dom = new JSDOM(html, { url: 'http://localhost:8888/admin/', pretendToBeVisual: true });
+  for (const key of ['window', 'document', 'Event', 'Option', 'FormData', 'location', 'history']) globalThis[key] = dom.window[key];
+  Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true });
+  globalThis.matchMedia = () => ({ matches: false });
+  dom.window.HTMLElement.prototype.scrollIntoView = function () {};
+  dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
+  dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; };
+  let settings = structuredClone(defaults), contentWrites = 0;
+  const uploadRequests = [], canvasSizes = [];
+  globalThis.createImageBitmap = async () => ({ width: 3000, height: 1500, close() {} });
+  dom.window.HTMLCanvasElement.prototype.getContext = function () { return { drawImage() {} }; };
+  dom.window.HTMLCanvasElement.prototype.toDataURL = function () { canvasSizes.push([this.width, this.height]); return 'data:image/webp;base64,UklGRg=='; };
+  const records = [
+    { id: 'new-job', form_name: 'quote-request', created_at: '2026-11-17T13:00:00Z', data: { name: 'New customer', pickup: 'Charlotte, NC', dropoff: 'Newton, NC', service: 'Equipment hauling', pickup_timing: 'Flexible', details: 'Test load' } },
+    { id: 'active-job', jobNumber: 'RS-202611-TOW-0001', form_name: 'quote-request', created_at: '2026-11-17T12:00:00Z', state: { status: 'Contacted', note: 'Saved note' }, data: { name: 'Active customer', pickup: 'Charlotte, NC', dropoff: 'Unsure', service: 'Vehicle towing or transport', pickup_timing: 'Today' } },
+    { id: 'private-review', form_name: 'customer-review', created_at: '2026-11-17T11:00:00Z', data: { first_name: 'Jamie', rating: '4', review: '<script>Private feedback</script>', 'publish-permission': '' } },
+  ];
+  globalThis.fetch = async (url, options) => {
+    if (url === '/assets/us-places.json') return Response.json([['Charlotte, NC', 35.227, -80.843]]);
+    if (url.startsWith('/.netlify/functions/owner-media')) {
+      if (options?.method === 'POST') {
+        const upload = JSON.parse(options.body); uploadRequests.push(upload);
+        return Response.json({ src: '/.netlify/functions/site-image?id=' + upload.id, width: upload.width, height: upload.height, alt: upload.alt });
+      }
+      return Response.json({ items: [], nextOffset: null });
+    }
+    const action = new URL(url, location.href).searchParams.get('action');
+    if (action === 'session') return Response.json({ localPreview: true, role: 'Owner', permissions: ['jobs', 'content', 'reviews', 'export', 'activity'], user: { email: 'Local preview' } });
+    if (action === 'profile') return Response.json({ data: null, revision: null });
+    if (action === 'content') {
+      if (options?.method === 'POST') { settings = JSON.parse(options.body).data; contentWrites++; }
+      return Response.json({ data: settings, revision: 'revision-' + contentWrites });
+    }
+    if (action === 'list') return Response.json({ items: records });
+    throw new Error('Unexpected request ' + url);
+  };
+  await import('../src/admin/index.js');
+  const settle = () => new Promise(resolve => setTimeout(resolve, 25));
+  await settle();
+  const $ = selector => document.querySelector(selector);
+  assert.equal($('#owner-workspace').hidden, false);
+  assert.equal($('.editor-section[open]'), null);
+  assert.equal(document.querySelectorAll('.metric-card').length, 3);
+  document.documentElement.scrollTop = 500;
+  document.querySelectorAll('.metric-card')[1].click();
+  assert.equal(document.documentElement.scrollTop, 0, 'switching sections brings the new page heading into view');
+  assert.equal(document.activeElement.id, 'workspace-title', 'section changes announce the page heading to keyboard and screen-reader users');
+  assert.equal($('#enquiry-filter').value, 'active');
+  assert.equal(document.querySelectorAll('.enquiry-row').length, 1);
+  assert.match($('.enquiry-row').textContent, /Active customer/);
+  assert.match($('.enquiry-reference').textContent, /RS-202611-TOW-0001/);
+  $('.enquiry-row').click();
+  assert.equal(location.hash, '#enquiries/RS-202611-TOW-0001');
+  $('#enquiry-search').value = 'rs 202611 tow 0001';
+  $('#enquiry-search').dispatchEvent(new Event('input', { bubbles: true }));
+  assert.equal(document.querySelectorAll('.enquiry-row').length, 1);
+  $('#enquiry-search').value = '';
+  $('#enquiry-search').dispatchEvent(new Event('input', { bubbles: true }));
+  $('#enquiry-tab-2').click();
+  $('#owner-field-note').value = 'Unsaved note, keep it';
+  $('#owner-field-note').dispatchEvent(new Event('input', { bubbles: true }));
+  $('#enquiry-search').value = 'does not exist';
+  $('#enquiry-search').dispatchEvent(new Event('input', { bubbles: true }));
+  $('#enquiry-search').value = '';
+  $('#enquiry-search').dispatchEvent(new Event('input', { bubbles: true }));
+  $('#enquiry-tab-2').click();
+  assert.equal($('#owner-field-note').value, 'Unsaved note, keep it');
+  $('[data-owner-view="website"]').click();
+  const opening = $('[data-section="opening"]'); opening.open = true;
+  opening.dispatchEvent(new Event('toggle'));
+  document.querySelector('[aria-label="Change homepage photo"]').click();
+  assert.equal($('#image-picker-dialog').open, true);
+  $('[data-media-tab="library"]').click(); await settle();
+  document.querySelector('[data-image-src="/assets/towing-stock.webp"]').click();
+  $('#image-picker-use').click(); await settle();
+  assert.equal($('#image-picker-dialog').open, false);
+  assert.equal($('#section-preview .site-mini-hero > img').getAttribute('src'), '/assets/towing-stock.webp');
+  assert.equal(contentWrites, 0, 'Choosing an image only changes the draft.');
+  $('#content-discard').click();
+  assert.equal($('#section-preview .site-mini-hero > img').getAttribute('src'), defaults.heroImage.src);
+  const photoDrop = new Event('drop', { bubbles: true, cancelable: true });
+  Object.defineProperty(photoDrop, 'dataTransfer', { value: { files: [{ type: 'image/png', size: 3000, name: 'Equipment photo.png' }] } });
+  $('.website-image-current').dispatchEvent(photoDrop); await settle();
+  assert.equal($('#image-picker-dialog').open, true);
+  assert.match($('#image-picker-file-info').textContent, /Equipment photo.png/);
+  assert.deepEqual(canvasSizes, [[1920, 960]], 'Large device images are prepared at a bounded size.');
+  assert.equal($('#image-picker-alt').value, '', 'A new image needs its own description.');
+  $('#image-picker-alt').value = 'Our truck carrying a tractor';
+  $('#image-picker-use').click(); await settle();
+  assert.equal(uploadRequests.length, 1);
+  assert.equal($('#image-picker-dialog').open, false);
+  assert.equal($('#section-preview .site-mini-hero > img').getAttribute('src'), '/.netlify/functions/site-image?id=' + uploadRequests[0].id);
+  assert.equal(contentWrites, 0, 'Uploading an image must not publish the website.');
+  $('#content-discard').click();
+  assert.equal($('#section-preview .site-mini-hero > img').getAttribute('src'), defaults.heroImage.src);
+  const drop = new Event('drop', { bubbles: true, cancelable: true });
+  Object.defineProperty(drop, 'dataTransfer', { value: { files: [{ type: 'application/pdf', size: 10 }] } });
+  $('.website-image-current').dispatchEvent(drop); await settle();
+  assert.match($('#image-picker-status').textContent, /JPG/);
+  $('#image-picker-dialog').close();
+  $('#owner-field-headline').value = 'Draft only headline';
+  $('#owner-field-headline').dispatchEvent(new Event('input', { bubbles: true }));
+  assert.match($('#section-preview').textContent, /Draft only headline/);
+  assert.equal(contentWrites, 0);
+  const contact = $('[data-section="contact"]'); contact.open = true;
+  contact.dispatchEvent(new Event('toggle'));
+  assert.equal(opening.open, false);
+  assert.equal($('#owner-field-headline').value, 'Draft only headline');
+  $('#owner-field-email').value = 'bad email'; contact.open = false;
+  $('#content-publish').click();
+  assert.equal(contentWrites, 0);
+  assert.equal(contact.open, true);
+  assert.equal(document.activeElement.id, 'owner-field-email');
+  $('#owner-field-email').value = defaults.email;
+  $('#content-publish').click(); await settle();
+  assert.equal(contentWrites, 1);
+  assert.equal(settings.headline, 'Draft only headline');
+  assert.equal($('#content-publish').disabled, true);
+  $('[data-owner-view="reviews"]').click();
+  const publish = [...document.querySelectorAll('.review-actions-menu button')].find(button => button.textContent === 'Publish');
+  assert.equal(publish.disabled, true);
+  $('.review-card-footer .quiet-button').click();
+  assert.equal($('#review-preview-dialog').open, true);
+  assert.match($('#review-preview-body').textContent, /<script>Private feedback<\/script>/);
+  assert.equal($('#review-preview-body script'), null);
+  dom.window.close();
+});
