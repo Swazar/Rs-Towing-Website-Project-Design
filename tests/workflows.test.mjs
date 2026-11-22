@@ -41,16 +41,17 @@ test('local owner bypass cannot activate on a production hostname and mutations 
   if (previous === undefined) delete process.env.NETLIFY_DEV; else process.env.NETLIFY_DEV = previous;
 });
 
-test('a manual roadside quote survives refresh, returns from summary edits, and preserves answers on a failed send', async () => {
+test('a manual roadside quote survives refresh and failed sends, then confirms success in the same popup', async () => {
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   const catalog = JSON.parse(await readFile(new URL('../public/assets/us-places.json', import.meta.url), 'utf8'));
   let submitted;
+  let acceptQuote = false;
   globalThis.fetch = async (url, options) => {
     if (url.endsWith('site-content')) return Response.json({ settings: defaults, reviews: [], localPreview: true });
     if (url.endsWith('us-places.json')) return Response.json(catalog);
     if (url.endsWith('local-submission')) {
       submitted = new URLSearchParams(options.body);
-      return new Response(null, { status: 503 });
+      return new Response(null, { status: acceptQuote ? 204 : 503 });
     }
     throw new Error('Unexpected test request ' + url);
   };
@@ -108,6 +109,9 @@ test('a manual roadside quote survives refresh, returns from summary edits, and 
   const draft = sessionStorage.getItem('rs-quote-draft-v1');
   dom.window.close(); dom = mount(draft);
   enhanceQuoteForm(); await settle(); form = document.forms['quote-request'];
+  const trigger = document.querySelector('[data-quote]');
+  trigger.click();
+  await settle();
   assert.equal(form.elements.name.value, 'Local test');
   assert.equal(form.elements.pickup_street.value, 'I-85 exit 40, near the service station');
   assert.match(document.querySelector('.quote-progress-label').textContent, /Step 3/);
@@ -126,6 +130,32 @@ test('a manual roadside quote survives refresh, returns from summary edits, and 
   assert.match(document.querySelector('.submit-status').textContent, /could not be confirmed/);
   assert.equal(form.elements.name.value, 'Local test');
   assert.ok(sessionStorage.getItem('rs-quote-draft-v1'));
+  const requestId = submitted.get('request_id');
+  const dialog = document.querySelector('#quote-dialog');
+  const success = dialog.querySelector('.quote-success');
+  acceptQuote = true;
+  form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  assert.equal(success.hidden, true);
+  await settle();
+  assert.equal(submitted.get('request_id'), requestId);
+  assert.equal(location.pathname, '/');
+  assert.equal(dialog.open, true);
+  assert.equal(dialog.querySelector('.quote-entry').hidden, true);
+  assert.equal(success.hidden, false);
+  assert.equal(success.querySelector('#quote-success-preview').hidden, false);
+  assert.equal(document.activeElement.id, 'quote-success-title');
+  assert.equal(sessionStorage.getItem('rs-quote-draft-v1'), null);
+  success.querySelector('.quote-done').click();
+  assert.equal(dialog.open, false);
+  assert.equal(document.activeElement, trigger);
+  assert.equal(sessionStorage.getItem('rs-quote-draft-v1'), null);
+  trigger.click();
+  await settle();
+  assert.equal(dialog.open, true);
+  assert.equal(success.hidden, true);
+  assert.equal(dialog.getAttribute('aria-labelledby'), 'quote-dialog-title');
+  assert.match(dialog.querySelector('.quote-progress-label').textContent, /Step 1/);
+  assert.equal(form.elements.name.value, '');
   document.querySelector('.quote-reset').click();
   assert.equal(form.elements.name.value, '');
   assert.equal(form.elements.pickup.readOnly, false);

@@ -10,6 +10,11 @@ export function enhanceQuoteForm() {
   const dialog = document.querySelector('#quote-dialog');
   if (!dialog || typeof dialog.showModal !== 'function') return;
   const form = document.forms['quote-request'];
+  const entry = dialog.querySelector('.quote-entry');
+  const success = dialog.querySelector('.quote-success');
+  const successTitle = success.querySelector('#quote-success-title');
+  const successCopy = success.querySelector('#quote-success-copy');
+  const successPreview = success.querySelector('#quote-success-preview');
   const steps = [...form.querySelectorAll('.quote-step')];
   const progress = [...dialog.querySelectorAll('.quote-progress li')];
   const progressLabel = dialog.querySelector('.quote-progress-label');
@@ -238,14 +243,18 @@ export function enhanceQuoteForm() {
   back.addEventListener('click', () => {
     editingSummary = false; showStep(activeStep - 1); steps[activeStep].querySelector('legend').focus();
   });
-  form.querySelector('.quote-reset').addEventListener('click', () => {
+  function resetForm() {
     form.reset(); manualMode = false; automaticCache = { pickup: '', dropoff: '', selected: {} }; editingSummary = false;
     previousDropoff = ''; previousDropoffPlace = undefined; wasUndecided = false;
     requestId = crypto.randomUUID();
     locations.restore({});
     form.querySelectorAll('[aria-invalid]').forEach(field => setError(field, ''));
     status.hidden = true; updateConditionalFields(); showStep(0);
-    form.elements.pickup.dispatchEvent(new Event('input', { bubbles: true }));
+    form.elements.pickup.dispatchEvent(new Event('routechange'));
+  }
+  form.querySelector('.quote-reset').addEventListener('click', () => {
+    if (sending) return;
+    resetForm();
     steps[0].querySelector('legend').focus();
   });
   form.addEventListener('submit', async event => {
@@ -261,16 +270,28 @@ export function enhanceQuoteForm() {
     }
     sending = true; next.disabled = true; next.textContent = 'Sending…'; status.hidden = true;
     form.elements.request_id.value = requestId;
+    let local;
     try {
-      const local = await sendForm(form);
-      try { sessionStorage.removeItem(draftKey); } catch {}
-      location.assign('/quote-sent/' + (local ? '?preview=1' : ''));
+      local = await sendForm(form);
     } catch (error) {
       status.textContent = error.message; status.hidden = false;
       sending = false; next.disabled = false; next.textContent = 'Try sending again';
+      return;
     }
+    resetForm();
+    try { sessionStorage.removeItem(draftKey); } catch {}
+    sending = false;
+    next.disabled = false;
+    entry.hidden = true;
+    successCopy.hidden = local;
+    successPreview.hidden = !local;
+    success.hidden = false;
+    dialog.setAttribute('aria-labelledby', successTitle.id);
+    dialog.setAttribute('aria-describedby', local ? successPreview.id : successCopy.id);
+    dialog.scrollTop = 0;
+    if (dialog.open) successTitle.focus();
   });
-  dialog.append(form);
+  entry.append(form);
   form.noValidate = true;
   updateConditionalFields();
   steps.forEach((step, i) => { step.hidden = i !== 0; });
@@ -280,8 +301,14 @@ export function enhanceQuoteForm() {
     trigger.setAttribute('aria-haspopup', 'dialog');
     trigger.addEventListener('click', async event => {
       if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
-      event.preventDefault(); opener = trigger;
+      event.preventDefault();
       await restored;
+      if (dialog.open) return;
+      opener = trigger;
+      success.hidden = true;
+      entry.hidden = false;
+      dialog.setAttribute('aria-labelledby', 'quote-dialog-title');
+      dialog.removeAttribute('aria-describedby');
       if (trigger.dataset.service) {
         service.value = trigger.dataset.service; updateConditionalFields(); showStep(0);
       }
@@ -289,5 +316,9 @@ export function enhanceQuoteForm() {
     });
   }
   dialog.querySelector('.quote-close').addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', () => { saveDraft(); opener?.focus({ preventScroll: true }); });
+  success.querySelector('.quote-done').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('close', () => {
+    if (success.hidden) saveDraft();
+    opener?.focus({ preventScroll: true });
+  });
 }

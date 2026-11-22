@@ -322,16 +322,34 @@
   </footer>
 
   <dialog class="quote-dialog" id="quote-dialog" aria-labelledby="quote-dialog-title">
-    <div class="quote-dialog-header">
-      <h2 id="quote-dialog-title" tabindex="-1" autofocus>Request a free quote</h2>
-      <button class="button button-outline quote-close" type="button" aria-label="Close quote form">Close</button>
+    <div class="quote-entry">
+      <div class="quote-dialog-header">
+        <h2 id="quote-dialog-title" tabindex="-1" autofocus>Request a free quote</h2>
+        <button class="button button-outline quote-close" type="button" aria-label="Close quote form">Close</button>
+      </div>
+      <p class="quote-progress-label" aria-live="polite">Step 1 of 3 · Route</p>
+      <ol class="quote-progress" aria-label="Quote progress">
+        <li aria-current="step">Route</li>
+        <li>Load</li>
+        <li>Contact</li>
+      </ol>
     </div>
-    <p class="quote-progress-label" aria-live="polite">Step 1 of 3 · Route</p>
-    <ol class="quote-progress" aria-label="Quote progress">
-      <li aria-current="step">Route</li>
-      <li>Load</li>
-      <li>Contact</li>
-    </ol>
+    <section class="quote-success" hidden>
+      <div class="quote-success-art" aria-hidden="true">
+        <span class="quote-success-icon"><span class="quote-success-check"></span></span>
+        <span class="quote-success-bubble"></span>
+        <span class="quote-success-bubble"></span>
+        <span class="quote-success-bubble"></span>
+        <span class="quote-success-bubble"></span>
+      </div>
+      <h2 id="quote-success-title" tabindex="-1">Quote request sent!</h2>
+      <div class="quote-success-copy" id="quote-success-copy">
+        <p data-reply-expectation>We’ll contact you to confirm availability, price, and pickup details.</p>
+        <p class="field-hint">Your booking is confirmed once you arrange it with us.</p>
+      </div>
+      <p class="quote-success-copy" id="quote-success-preview" hidden>Saved to the local workspace. No notification email was sent.</p>
+      <button class="button quote-done" type="button">Done</button>
+    </section>
   </dialog>
   <dialog class="quote-dialog review-dialog" id="review-dialog" aria-labelledby="review-dialog-title">
     <div class="quote-dialog-header">

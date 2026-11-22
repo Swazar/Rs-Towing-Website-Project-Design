@@ -171,6 +171,29 @@ h2 { font-size: clamp(1.95rem, 3.5vw, 3rem); }
 .quote-progress .is-complete, .quote-progress [aria-current] { border-color: var(--brand); color: var(--ink); }
 .quote-progress [aria-current] { font-weight: 800; }
 .quote-dialog .quote-form { padding: 0; border: 0; background: transparent; }
+.quote-success { display: grid; justify-items: center; align-content: center; gap: 14px; padding: clamp(8px, 3vw, 30px) 4px; text-align: center; }
+.quote-success-art { position: relative; display: grid; place-items: center; width: 148px; height: 124px; }
+.quote-success-icon {
+  display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%;
+  background: linear-gradient(145deg, #109863, #076844); box-shadow: 0 0 0 9px #e6f6ed, 0 10px 22px #07684426;
+}
+.quote-success-check {
+  display: block; width: 42px; height: 34px; background: var(--white);
+  clip-path: polygon(0 52%, 14% 36%, 37% 63%, 87% 6%, 100% 21%, 37% 93%);
+}
+.quote-success-bubble {
+  position: absolute; width: var(--bubble-size); height: var(--bubble-size); border-radius: 50%;
+  background: var(--bubble-color); transform: translate(var(--bubble-x), var(--bubble-y));
+}
+.quote-success-bubble:nth-child(2) { --bubble-size: 10px; --bubble-x: -57px; --bubble-y: -28px; --bubble-color: #7ccea1; }
+.quote-success-bubble:nth-child(3) { --bubble-size: 6px; --bubble-x: 42px; --bubble-y: -45px; --bubble-color: #1f9a67; }
+.quote-success-bubble:nth-child(4) { --bubble-size: 11px; --bubble-x: 63px; --bubble-y: 15px; --bubble-color: #a7dfbf; }
+.quote-success-bubble:nth-child(5) { --bubble-size: 6px; --bubble-x: -46px; --bubble-y: 42px; --bubble-color: #1f9a67; }
+.quote-success h2 { font-size: clamp(1.85rem, 5.5vw, 2.6rem); text-wrap: balance; }
+.quote-success-copy { max-width: 39ch; color: var(--muted); text-wrap: pretty; }
+.quote-success-copy .field-hint { margin-top: 8px; }
+.quote-success .quote-done { min-width: 132px; margin-top: 6px; border-color: #08704a; background: #08704a; }
+.quote-success .quote-done:hover { border-color: #055839; background: #055839; }
 .quote-step { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .quote-step legend { padding: 0; font-size: 1.08rem; font-weight: 750; }
 .quote-step > div { margin-top: 12px; }
@@ -251,6 +274,7 @@ h2 { font-size: clamp(1.95rem, 3.5vw, 3rem); }
   .work-grid img { height: auto; aspect-ratio: 1.57; }
   .quote-dialog { width: 100%; max-width: 100%; height: 100%; max-height: 100dvh; margin: 0; border: 0; border-radius: 0; padding: 18px 18px max(18px, env(safe-area-inset-bottom)); }
   .quote-dialog-header { position: sticky; top: -18px; padding: 12px 0; background: var(--white); z-index: 10; }
+  .quote-success { min-height: 100%; }
   .quote-summary dl > div { grid-template-columns: 65px minmax(0, 1fr) auto; }
   .location-suggestions { max-height: min(220px, 35dvh); }
   .route-map { height: 220px; }
@@ -264,6 +288,9 @@ h2 { font-size: clamp(1.95rem, 3.5vw, 3rem); }
   .hero-image { animation-delay: .06s; }
   .hero-copy:focus-within, .is-revealing:focus-within { animation: none; }
   .quote-dialog[open] { animation-duration: .23s; }
+  .quote-success-icon { animation: quote-success-pop .56s cubic-bezier(.21, .78, .27, 1) both; }
+  .quote-success-check { animation: quote-success-tick .32s .14s ease-out both; }
+  .quote-success-bubble { animation: quote-success-burst .62s .09s cubic-bezier(.18, .8, .27, 1) both; }
   .faq-list summary::after { transition: transform .22s ease; }
   @supports (interpolate-size: allow-keywords) and selector(details::details-content) {
     .faq-list details { interpolate-size: allow-keywords; }
@@ -275,6 +302,21 @@ h2 { font-size: clamp(1.95rem, 3.5vw, 3rem); }
     }
     .faq-list details[open]::details-content { block-size: auto; opacity: 1; }
   }
+}
+
+@keyframes quote-success-pop {
+  0% { opacity: 0; transform: scale(.55); }
+  48% { opacity: 1; transform: scale(1.13); }
+  73% { transform: scale(.96); }
+  100% { transform: scale(1); }
+}
+@keyframes quote-success-tick {
+  from { mask-image: linear-gradient(#000 0 0); mask-size: 0% 100%; mask-repeat: no-repeat; }
+  to { mask-image: linear-gradient(#000 0 0); mask-size: 100% 100%; mask-repeat: no-repeat; }
+}
+@keyframes quote-success-burst {
+  from { opacity: 0; transform: scale(.3); }
+  to { opacity: 1; transform: translate(var(--bubble-x), var(--bubble-y)); }
 }
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
