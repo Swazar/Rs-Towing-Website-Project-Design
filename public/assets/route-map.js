@@ -9,7 +9,9 @@ export function loadLeaflet() {
   style.rel = 'stylesheet';
   style.href = '/assets/map-tools.css';
   const css = new Promise((resolve, reject) => { style.onload = resolve; style.onerror = reject; document.head.append(style); });
-  leaflet = Promise.all([css, import('./map-tools.bundle.js')]).then(([, tools]) => {
+  // Both the standalone module and the admin bundle load this generated asset in the browser.
+  const bundle = new URL('./map-tools.bundle.js', import.meta.url).href;
+  leaflet = Promise.all([css, import(bundle)]).then(([, tools]) => {
     mapTools = tools; window.L = tools.L; return tools.L;
   }).catch(() => {
     style.remove();
