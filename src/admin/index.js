@@ -18,6 +18,7 @@ import { WorkspaceIdle } from '../../public/assets/admin-session.js';
 import { recoveryPreview } from '../../public/assets/admin-recovery.js';
 import { WorkspaceAssistant } from '../../public/assets/admin-assistant.js';
 import { WorkspaceEmail } from './email.ts';
+import { SubmissionBackupsPanel } from './submission-backups.ts';
 
 clearLoginQuery(window.location, window.history);
 const $ = selector => document.querySelector(selector);
@@ -130,6 +131,7 @@ function switchView(view, jobNumber) {
   navigation.select(document.querySelector('.owner-navigation [aria-current]'));
   assistant.setView(view);
   accountSettings.setActive(view === 'settings');
+  if (view === 'settings' && changed && permissions.includes('backups')) void backupsPanel.load();
   history.replaceState(null, '', view === 'enquiries' && jobNumber ? enquiryHash(jobNumber) : '#' + view);
   email.setActive(view === 'email');
   if (changed) {
@@ -298,8 +300,30 @@ function renderReviews() {
 async function loadItems() {
   const result = await api('list'); items = result.items;
   reminders = result.reminders || { data: [], revision: null }; activity = result.activity || [];
+  renderQuoteAlerts(result.quoteAlerts);
   enquiries.setItems(quotes());
   renderReviews(); renderOverview();
+}
+
+const backupsPanel = new SubmissionBackupsPanel($('#submission-backups'), {
+  status: () => api('backups'),
+  capture: () => api('backups', { operation: 'capture' }),
+  restore: id => api('backups', { operation: 'restore', id }),
+}, loadItems);
+
+function renderQuoteAlerts(alerts) {
+  const summary = $('#enquiry-alert-summary');
+  if (!summary) return;
+  const missed = day => day.skipped + day.failed;
+  summary.hidden = !alerts || (!alerts.enabled && !missed(alerts.today) && !missed(alerts.previous));
+  if (summary.hidden) return;
+  const { today, previous } = alerts;
+  const stats = [today.sent + ' sent', today.pending + ' pending'];
+  if (today.failed) stats.push(today.failed + ' failed');
+  if (today.skipped) stats.push((today.lowerBound ? 'At least ' : '') + today.skipped + ' skipped at the daily limit');
+  const yesterday = missed(previous);
+  $('#enquiry-alert-counts').textContent = stats.join(' · ') + (yesterday ?
+    '. Yesterday, ' + (previous.lowerBound ? 'at least ' : '') + yesterday + ' missed.' : '.');
 }
 
 function renderActivity() {

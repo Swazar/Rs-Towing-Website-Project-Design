@@ -1,4 +1,4 @@
-const ownerPermissions = ['jobs', 'content', 'reviews', 'export', 'activity', 'email'];
+const ownerPermissions = ['jobs', 'content', 'reviews', 'export', 'activity', 'email', 'backups'];
 export function permissionsFor(user) {
   if (user?.roles?.includes('owner')) return [...ownerPermissions];
   if (user?.roles?.includes('staff')) return ['jobs'];
@@ -14,6 +14,7 @@ export function canUseAction(user, action, method) {
   if (action === 'review') return permissions.includes('reviews');
   if (action === 'export') return permissions.includes('export');
   if (action === 'versions') return permissions.includes('content');
+  if (action === 'backups' || action === 'backup-download' && method === 'GET') return permissions.includes('backups');
   return false;
 }
 

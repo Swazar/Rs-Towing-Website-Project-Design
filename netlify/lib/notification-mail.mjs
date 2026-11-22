@@ -3,6 +3,7 @@ import { businessDateKey } from '../../src/domain/jobs/dates.ts';
 import { deployContext, readRecord, writeRecord, recordPages, mapInBatches } from './store.mjs';
 
 const quoteLimit = 25;
+const overflowLimit = 1000;
 const retryWindow = 12 * 60 * 60_000;
 const maxAttempts = 5;
 const store = { read: readRecord, write: writeRecord, pages: recordPages };
@@ -41,14 +42,44 @@ export async function enqueueQuote(data, settings, now = Date.now(), storage = s
   const fields = [data.name, data.phone, data.pickup, data.dropoff, data.service, data.details];
   if (fields.some(value => typeof value !== 'string' || !value.trim())) return null;
   const requestId = /^[\da-f-]{36}$/i.test(data.request_id || '') ? data.request_id : null;
-  const key = 'mail/quotes/' + dayOffset(now, 0);
+  const today = dayOffset(now, 0);
+  const key = 'mail/quotes/' + today;
   const id = createHash('sha256').update(requestId || JSON.stringify(fields)).digest('hex');
+  let overLimit = false;
   const stage = await update(key, entries => {
-    if (entries[id] || Object.keys(entries).length >= quoteLimit) return;
+    overLimit = false;
+    if (entries[id]) return;
+    if (Object.keys(entries).length >= quoteLimit) {
+      overLimit = true;
+      return;
+    }
     return { ...entries, [id]: { created: now, attempts: 0,
       message: email(settings, 'New RS on the Go quote request', 'A new quote request is ready in Enquiries.\n\n' + settings.admin + '#enquiries') } };
   }, storage);
+  if (overLimit) {
+    await update('mail/quote-overflow/' + today, record => {
+      if (record.full || record.ids?.includes(id)) return;
+      const ids = record.ids ?? [];
+      return ids.length >= overflowLimit ? { ids, full: true } : { ids: [...ids, id] };
+    }, storage);
+  }
   return stage ? { key, id } : null;
+}
+
+export async function quoteAlertSummary({ settings = mailSettings(), now = Date.now(), storage = store } = {}) {
+  const summarize = async offset => {
+    const date = dayOffset(now, offset);
+    const [queue, overflow] = await Promise.all([
+      storage.read('mail/quotes/' + date), storage.read('mail/quote-overflow/' + date),
+    ]);
+    const entries = Object.values(queue.data ?? {});
+    const sent = entries.filter(item => item.sent).length;
+    const failed = entries.filter(item => !item.sent && (item.attempts >= maxAttempts || now - item.created >= retryWindow)).length;
+    return { date, sent, pending: entries.length - sent - failed, failed, skipped: overflow.data?.ids?.length ?? 0,
+      lowerBound: Boolean(overflow.data?.full) };
+  };
+  const [today, previous] = await Promise.all([summarize(0), summarize(-1)]);
+  return { enabled: Boolean(settings?.quotes), today, previous };
 }
 
 async function send(message, key, settings) {

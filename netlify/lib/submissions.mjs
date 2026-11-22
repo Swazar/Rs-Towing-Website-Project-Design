@@ -1,8 +1,9 @@
 import { readRecord, writeRecord, isLocalPreview, deployContext } from './store.mjs';
+import { readRecoveredSubmissions } from './submission-archive.mjs';
 
 const apiBase = 'https://api.netlify.com/api/v1';
 
-export async function listSubmissions(request) {
+export async function listOriginalSubmissions(request) {
   if (isLocalPreview(request)) return (await readRecord('local-submissions')).data ?? [];
   // Deploy previews share the live Forms site ID. Keep their inbox isolated.
   if (deployContext() !== 'production') return [];
@@ -23,6 +24,13 @@ export async function listSubmissions(request) {
     if (batch.length < 100) break;
   }
   return items;
+}
+
+export async function listSubmissions(request) {
+  if (!isLocalPreview(request) && deployContext() !== 'production') return [];
+  const [originals, recovered] = await Promise.all([listOriginalSubmissions(request), readRecoveredSubmissions()]);
+  const ids = new Set(originals.map(item => item.id));
+  return [...originals, ...recovered.filter(item => !ids.has(item.id))];
 }
 
 export async function addLocalSubmission(data, requestId) {

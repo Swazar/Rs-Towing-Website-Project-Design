@@ -9,7 +9,7 @@
   <link rel="icon" href="/assets/rs-logo.webp" type="image/webp">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400..800&amp;display=swap">
   <link rel="stylesheet" href="/assets/site.css">
-  <link rel="stylesheet" href="/assets/admin.css">
+  <link rel="stylesheet" href="/assets/admin.css?v=9">
   <link rel="stylesheet" href="/assets/admin-shell.css">
   <link rel="stylesheet" href="/assets/admin-settings.css">
   <link rel="stylesheet" href="/assets/admin-email.css?v=7">
@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="/assets/workspace-customization.css">
   <link rel="stylesheet" href="/assets/workspace-themes.css">
   <link rel="stylesheet" href="/assets/admin-login.css">
-  <script type="module" src="/assets/admin.bundle.js?v=8"></script>
+  <script type="module" src="/assets/admin.bundle.js?v=9"></script>
 </head>
 <body class="admin-page owner-login-screen">
   <a class="skip-link" href="#admin-main">Skip to workspace</a>
@@ -92,7 +92,8 @@
         </div>
       </section>
       <section id="owner-enquiries" class="owner-view" hidden>
-        <div class="workspace-panel enquiry-workspace"><div class="inbox-toolbar"><div class="search-field"><label class="sr-only" for="enquiry-search">Search enquiries</label><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#search"/></svg><input id="enquiry-search" type="search" placeholder="Search job number, name, route, or service"></div><div class="filter-field"><label class="sr-only" for="enquiry-filter">Status</label><select id="enquiry-filter"><option value="">All enquiries</option><option value="active">Active requests</option><option>New</option><option>Contacted</option><option>Quoted</option><option>Booked</option><option>Closed</option></select></div><button class="icon-button owner-refresh" type="button" aria-label="Refresh enquiries"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#refresh-cw"/></svg></button></div><details class="enquiry-filter-options"><summary>More filters<svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div class="enquiry-extra-filters"><div class="field"><label for="enquiry-from">Received from (Eastern)</label><input id="enquiry-from" type="date"></div><div class="field"><label for="enquiry-to">Received until (Eastern)</label><input id="enquiry-to" type="date"></div><div class="field"><label for="enquiry-sort">Sort by</label><select id="enquiry-sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="pickup">Upcoming pickup</option></select></div><a class="button button-outline" id="enquiry-export" href="/.netlify/functions/owner?action=export" download data-permission="export">Export CSV</a></div></details><div class="owner-columns"><div class="inbox-list-panel"><div class="list-caption"><span>REQUESTS</span><span id="enquiry-result-count"></span></div><div id="enquiry-list" class="owner-list"></div></div><div id="enquiry-detail"></div></div></div>
+        <section class="workspace-panel enquiry-alert-summary" id="enquiry-alert-summary" aria-label="Quote email alerts" hidden><strong>Quote alerts today · Eastern</strong><p id="enquiry-alert-counts" role="status"></p></section>
+        <div class="workspace-panel enquiry-workspace"><div class="inbox-toolbar"><div class="search-field"><label class="sr-only" for="enquiry-search">Search enquiries</label><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#search"/></svg><input id="enquiry-search" type="search" placeholder="Search job number, name, route, or service"></div><div class="filter-field"><label class="sr-only" for="enquiry-filter">Status</label><select id="enquiry-filter"><option value="">All enquiries</option><option value="active">Active requests</option><option>New</option><option>Contacted</option><option>Quoted</option><option>Booked</option><option>Closed</option></select></div><button class="icon-button owner-refresh" type="button" aria-label="Refresh enquiries"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#refresh-cw"/></svg></button></div><details class="enquiry-filter-options"><summary>More filters<svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div class="enquiry-extra-filters"><div class="field"><label for="enquiry-from">Received from (Eastern)</label><input id="enquiry-from" type="date"></div><div class="field"><label for="enquiry-to">Received until (Eastern)</label><input id="enquiry-to" type="date"></div><div class="field"><label for="enquiry-sort">Sort by</label><select id="enquiry-sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="pickup">Upcoming pickup</option></select></div><a class="button button-outline" id="enquiry-export" href="/.netlify/functions/owner?action=export" download data-permission="export">Export CSV</a></div></details><div class="owner-columns"><div class="inbox-list-panel"><div class="list-caption"><span>REQUESTS</span><span id="enquiry-result-count"></span></div><div id="enquiry-list" class="owner-list"></div><nav class="enquiry-pagination" id="enquiry-pagination" aria-label="Enquiry pages" hidden><button type="button" class="quiet-button" id="enquiry-previous">Previous</button><span id="enquiry-page-status" role="status"></span><button type="button" class="quiet-button" id="enquiry-next">Next</button></nav></div><div id="enquiry-detail"></div></div></div>
       </section>
       <section id="owner-email-view" class="owner-view" hidden>
         <section class="workspace-panel gmail-workbench" aria-label="Gmail workspace">
@@ -269,6 +270,22 @@
           </fieldset>
           <div class="settings-save-bar"><div><strong id="settings-save-label">Your settings are up to date.</strong><p id="profile-status" role="status" aria-live="polite"></p></div><div><button type="button" class="quiet-button" id="profile-discard" disabled>Discard changes</button><button type="submit" class="button" id="profile-save" disabled>Save changes</button></div></div>
         </form>
+        <section id="submission-backups" class="workspace-panel submission-backups" data-permission="backups" aria-labelledby="submission-backups-title" hidden>
+          <div class="panel-heading">
+            <div><h2 id="submission-backups-title">Submission backups</h2><p>Encrypted copies of quote requests and customer reviews.</p></div>
+            <button type="button" id="submission-backup-create" class="button button-outline" disabled>Back up now</button>
+          </div>
+          <div class="submission-backups-body">
+            <p id="submission-backup-status" role="status"></p>
+            <div id="submission-backup-controls" hidden>
+              <div class="field"><label for="submission-backup-copy">Saved copy</label><select id="submission-backup-copy"></select></div>
+              <div class="submission-backup-actions">
+                <a class="button button-outline" id="submission-backup-download" download>Download encrypted copy</a>
+                <button type="button" id="submission-backup-restore" class="quiet-button">Restore missing submissions</button>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
     </div>
   </main>

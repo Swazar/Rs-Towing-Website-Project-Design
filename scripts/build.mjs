@@ -1,5 +1,6 @@
 import { build } from 'esbuild';
 import { readFile, writeFile, copyFile, cp } from 'node:fs/promises';
+import { emitSiteDiscovery } from './site-discovery.mjs';
 
 await build({
   entryPoints: ['src/admin/index.js'],
@@ -21,3 +22,4 @@ const maplibreCSS = await readFile('node_modules/maplibre-gl/dist/maplibre-gl.cs
 await writeFile('public/assets/map-tools.css', leafletCSS.replaceAll('images/', 'map-images/') + '\n' + maplibreCSS);
 await copyFile('node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs', 'public/assets/maplibre-gl-worker.mjs');
 await cp('node_modules/leaflet/dist/images', 'public/assets/map-images', { recursive: true });
+await emitSiteDiscovery();

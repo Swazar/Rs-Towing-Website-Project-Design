@@ -16,6 +16,8 @@ import { activeData, saveRecoverable, versionsFor } from '../lib/recovery.mjs';
 import { loadWorkspaceInbox } from '../lib/jobs/workspace-inbox.ts';
 import { isQuote } from '../../src/domain/jobs/types.ts';
 import { assistantKey } from '../lib/assistant-ai.mjs';
+import { quoteAlertSummary } from '../lib/notification-mail.mjs';
+import { submissionBackups } from '../lib/submission-backups.mjs';
 
 export const config = { rateLimit: { action: 'rate_limit', windowLimit: 60, windowSize: 60, aggregateBy: ['ip'] } };
 
@@ -56,6 +58,14 @@ export default async function owner(request) {
     if (action === 'session' && request.method === 'GET') {
       return json({ user: actor, role: user.roles.includes('owner') ? 'Owner' : 'Staff', permissions, localPreview: isLocalPreview(request), expiresAt, assistantAvailable: Boolean(assistantKey(request)) });
     }
+    if (action === 'backups') {
+      const backups = submissionBackups();
+      if (request.method === 'GET') return json(await backups.status());
+      if (body.operation === 'capture') return json(await backups.capture(request));
+      if (body.operation === 'restore') return json(await backups.restore(request, body.id));
+      return json({ error: 'Choose a backup action.' }, 400);
+    }
+    if (action === 'backup-download') return await submissionBackups().download(new URL(request.url).searchParams.get('id'));
     if (action === 'profile') {
       const key = 'profile/' + Buffer.from(String(user.id)).toString('hex');
       const current = await readRecord(key);
@@ -91,14 +101,17 @@ export default async function owner(request) {
         const query = Object.fromEntries(new URL(request.url).searchParams);
         return new Response(enquiryCSV(filterEnquiries(items, query)), { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="rs-enquiries.csv"', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
       }
-      const reminders = await readRecord('reminders');
+      const [reminders, quoteAlerts] = await Promise.all([
+        readRecord('reminders'),
+        permissions.includes('activity') ? quoteAlertSummary().catch(() => null) : null,
+      ]);
       let activity = [];
       if (permissions.includes('activity')) {
         const settings = await readRecord('settings');
         activity = [...(settings.data?.history || []), ...reviewActivity, ...(reminders.data?.history || []), ...items.flatMap(item => item.state?.history || [])]
           .sort((a, b) => b.at.localeCompare(a.at)).slice(0, 50);
       } else items.forEach(item => { if (item.state) { const { history, ...state } = item.state; item.state = state; } });
-      return json({ items: items.sort((a, b) => b.created_at.localeCompare(a.created_at)), reminders: { data: reminders.data?.items || [], revision: reminders.revision }, activity });
+      return json({ items: items.sort((a, b) => b.created_at.localeCompare(a.created_at)), reminders: { data: reminders.data?.items || [], revision: reminders.revision }, activity, quoteAlerts });
     }
     if (action === 'reminder' && request.method === 'POST') {
       const current = await readRecord('reminders');

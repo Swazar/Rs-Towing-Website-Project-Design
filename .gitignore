@@ -9,3 +9,5 @@ public/assets/map-tools.bundle.js
 public/assets/map-tools.css
 public/assets/maplibre-gl-worker.mjs
 public/assets/map-images/
+public/sitemap.xml
+public/robots.txt

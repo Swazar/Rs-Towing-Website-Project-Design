@@ -20,10 +20,13 @@ interface EnquiriesOptions {
   onError: (error: unknown) => void;
 }
 
+const pageSize = 25;
+
 export class Enquiries {
   private items: Enquiry[] = [];
   private selectedId?: string;
   private drafts = new Map<string, Draft>();
+  private page = 1;
   private detail?: ReturnType<typeof createEnquiryDetail>;
   private search = document.querySelector<HTMLInputElement>('#enquiry-search')!;
   private status = document.querySelector<HTMLSelectElement>('#enquiry-filter')!;
@@ -34,15 +37,22 @@ export class Enquiries {
   private sidebarCount = document.querySelector('#enquiry-count')!;
   private list = document.querySelector('#enquiry-list')!;
   private total = document.querySelector('#enquiry-result-count')!;
+  private pagination = document.querySelector<HTMLElement>('#enquiry-pagination')!;
+  private previous = document.querySelector<HTMLButtonElement>('#enquiry-previous')!;
+  private next = document.querySelector<HTMLButtonElement>('#enquiry-next')!;
+  private pageStatus = document.querySelector('#enquiry-page-status')!;
   private record = document.querySelector<HTMLElement>('#enquiry-detail')!;
   private options: EnquiriesOptions;
 
   constructor(options: EnquiriesOptions) {
     this.options = options;
-    this.search.addEventListener('input', () => this.render());
+    const filter = () => { this.page = 1; this.render(); };
+    this.search.addEventListener('input', filter);
     for (const control of [this.status, this.from, this.to, this.sort]) {
-      control.addEventListener('change', () => this.render());
+      control.addEventListener('change', filter);
     }
+    this.previous.addEventListener('click', () => this.changePage(-1));
+    this.next.addEventListener('click', () => this.changePage(1));
   }
 
   get dirty() { return this.drafts.size > 0; }
@@ -51,22 +61,24 @@ export class Enquiries {
 
   setItems(items: Enquiry[]) {
     this.items = items;
-    if (!this.selectedId) {
+    const initial = !this.selectedId;
+    if (initial) {
       this.selectedId = items.find(item => !item.state || item.state.status === 'New')?.id ?? items[0]?.id;
     }
-    this.render();
+    this.render(initial);
   }
 
   setFilter(status: string) {
     this.status.value = status;
     this.search.value = '';
+    this.page = 1;
     this.render();
   }
 
   open(item: Enquiry) {
     this.status.value = this.search.value = this.from.value = this.to.value = '';
     this.selectedId = item.id;
-    this.render();
+    this.render(true);
   }
 
   openNumber(number: string) {
@@ -80,7 +92,7 @@ export class Enquiries {
     const current = this.items.find(entry => entry.id === item.id);
     if (current) Object.assign(current, { state: saved.data, revision: saved.revision });
     this.drafts.delete(item.id);
-    this.render();
+    this.render(true);
     if (this.selectedId === item.id) this.detail?.showEditor();
   }
 
@@ -88,21 +100,38 @@ export class Enquiries {
     return { status: this.status.value, search: this.search.value, from: this.from.value, to: this.to.value, sort: this.sort.value };
   }
 
-  render() {
+  private changePage(direction: number) {
+    this.page += direction;
+    this.render();
+    const control = direction < 0 ? this.previous : this.next;
+    if (control.disabled) this.list.querySelector<HTMLButtonElement>('button')?.focus();
+  }
+
+  render(followSelection = false) {
     this.sidebarCount.textContent = String(this.items.filter(item => !item.state || item.state.status === 'New').length);
     const filters = this.filters();
     const filtered = filterEnquiries(this.items, filters);
     this.exportLink.href = '/.netlify/functions/owner?' + new URLSearchParams({ action: 'export', ...filters });
-    if (!filtered.some(item => item.id === this.selectedId)) this.selectedId = filtered[0]?.id;
+    const selectedIndex = followSelection ? filtered.findIndex(item => item.id === this.selectedId) : -1;
+    if (selectedIndex >= 0) this.page = Math.floor(selectedIndex / pageSize) + 1;
+    const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+    this.page = Math.max(1, Math.min(this.page, pageCount));
+    const offset = (this.page - 1) * pageSize;
+    const visible = filtered.slice(offset, offset + pageSize);
+    if (!visible.some(item => item.id === this.selectedId)) this.selectedId = visible[0]?.id;
     this.total.textContent = String(filtered.length);
+    this.pagination.hidden = pageCount <= 1;
+    this.previous.disabled = this.page === 1;
+    this.next.disabled = this.page === pageCount;
+    this.pageStatus.textContent = 'Page ' + this.page + ' of ' + pageCount;
 
-    const list = filtered.map(item => this.listRow(item));
+    const list = visible.map(item => this.listRow(item));
     if (list.length) this.list.replaceChildren(...list);
     else this.list.replaceChildren(emptyState('No enquiries here', filters.search || filters.status || filters.from || filters.to
       ? 'Try another search or clear the filters.' : 'New requests will appear here.'));
 
     this.detail?.dispose();
-    const item = filtered.find(entry => entry.id === this.selectedId);
+    const item = visible.find(entry => entry.id === this.selectedId);
     if (item) this.renderDetail(item);
     else {
       this.detail = undefined;
