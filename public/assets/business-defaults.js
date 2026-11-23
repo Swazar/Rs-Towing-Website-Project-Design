@@ -6,7 +6,7 @@ export const defaults = {
   location: 'Charlotte, NC',
   hoursNote: 'Available 24/7',
   phone: '+12392465837',
-  email: 'ronthego586@gmail.com',
+  email: 'rsonthegodispatch@gmail.com',
   serviceArea: 'Based in Charlotte, serving North Carolina and taking long-distance requests. Share your route so we can confirm coverage.',
   replyExpectation: 'We’ll contact you to confirm availability, price, and pickup details.',
   availabilityMessage: '',
