@@ -12,10 +12,8 @@ export async function requireIdentityUser(request) {
 }
 
 export async function loadIdentitySignIn(user, getIdentityUser = admin.getUser) {
-  if (user.lastSignInAt) return user;
-
-  // The SDK's verified claims fallback contains roles, but no last sign-in time.
-  // Look up only the authenticated account. A token refresh does not count as a login.
+  // Recheck the authenticated account when its initial profile could not open a
+  // workspace session. A token refresh does not count as a login.
   const current = await getIdentityUser(user.id);
   if (current?.id !== user.id || !permissionsFor(current).length) {
     throw Object.assign(new Error('This account does not have workspace access.'), { status: 403 });

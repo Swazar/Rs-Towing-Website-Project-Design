@@ -5,6 +5,7 @@ const cookieName = '__Host-rs_workspace';
 const idleMs = 30 * 60_000;
 const absoluteMs = 12 * 60 * 60_000;
 const maxSessions = 8;
+const signInWindowMs = 5 * 60_000;
 const keyFor = user => 'workspace-session/' + createHash('sha256').update(user.id).digest('hex');
 const expired = () => Object.assign(new Error('Your workspace session ended. Sign in again.'), { status: 401 });
 
@@ -35,19 +36,27 @@ export async function changeSessions(user, update, storage = { readRecord, write
   }
 }
 
+export async function recordIdentitySignIn(user, { now = Date.now(), storage } = {}) {
+  await changeSessions(user, data => ({ ...data, identitySignIn: Math.max(data.identitySignIn ?? 0, now) }), storage);
+}
+
 export async function openWorkspaceSession(request, user, { freshIdentity = false, now = Date.now(), storage } = {}) {
-  const recentLogin = Date.parse(user.lastSignInAt) || 0;
-  if (freshIdentity && (recentLogin < now - 5 * 60_000 || recentLogin > now + 30_000)) throw expired();
+  const profileSignIn = Date.parse(user.lastSignInAt) || 0;
   const token = randomBytes(32).toString('hex');
   const id = digest(token);
   const previousId = sessionId(request);
   await changeSessions(user, data => {
-    if (freshIdentity && recentLogin <= data.latestLogin) throw expired();
+    const recentLogin = Math.max(profileSignIn <= now + 30_000 ? profileSignIn : 0, data.identitySignIn ?? 0);
+    if (freshIdentity && (recentLogin < now - signInWindowMs || recentLogin > now + 30_000 || recentLogin <= data.latestLogin)) {
+      throw Object.assign(new Error('Google verified your account, but the workspace could not confirm a fresh sign-in. Choose Login with Google to try again.'), {
+        status: 401, code: 'WORKSPACE_SIGN_IN_FRESHNESS',
+      });
+    }
     const entries = Object.entries(data.entries)
       .filter(([key, session]) => key !== previousId && expiresAt(session) > now)
       .sort(([, a], [, b]) => b.lastSeen - a.lastSeen).slice(0, maxSessions - 1);
     entries.push([id, { started: now, lastSeen: now }]);
-    return { entries: Object.fromEntries(entries), latestLogin: Math.max(data.latestLogin, recentLogin) };
+    return { entries: Object.fromEntries(entries), latestLogin: Math.max(data.latestLogin, recentLogin, freshIdentity ? 0 : now) };
   }, storage);
   return token;
 }

@@ -443,7 +443,13 @@ async function start() {
   } catch (error) {
     if (error.status === 401) {
       showLogin();
-      login.message(new URLSearchParams(location.search).has('session-ended') ? 'Your workspace session ended. Please sign in again.' : '');
+      const url = new URL(location.href);
+      const ended = url.searchParams.has('session-ended');
+      if (ended) {
+        url.searchParams.delete('session-ended');
+        history.replaceState(history.state, '', url);
+      }
+      login.message(ended ? 'Your workspace session ended. Please sign in again.' : '');
     }
     else announce(error.message, { tone: 'error' });
   }

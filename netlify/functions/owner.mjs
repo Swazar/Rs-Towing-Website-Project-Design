@@ -50,8 +50,13 @@ export default async function owner(request) {
     const user = await requireIdentityUser(request);
     if (action === 'session-start' && request.method === 'POST') {
       if (isLocalPreview(request)) return json({ signedIn: true });
-      const signedInUser = await loadIdentitySignIn(user);
-      return sessionResponse({ signedIn: true }, await openWorkspaceSession(request, signedInUser, { freshIdentity: true }));
+      try {
+        return sessionResponse({ signedIn: true }, await openWorkspaceSession(request, user, { freshIdentity: true }));
+      } catch (error) {
+        if (error.code !== 'WORKSPACE_SIGN_IN_FRESHNESS') throw error;
+        const signedInUser = await loadIdentitySignIn(user);
+        return sessionResponse({ signedIn: true }, await openWorkspaceSession(request, signedInUser, { freshIdentity: true }));
+      }
     }
     const expiresAt = await checkWorkspaceSession(request, user, { touch: action === 'session-touch' && request.method === 'POST' });
     if (action === 'session-touch' && request.method === 'POST') return json({ expiresAt });

@@ -8,7 +8,7 @@ import formTraffic from '../netlify/edge-functions/form-traffic.js';
 import { storeName, readRecord, writeRecord } from '../netlify/lib/store.mjs';
 import { assignJobNumbers } from '../netlify/lib/jobs/number-store.ts';
 import { canUseAction } from '../netlify/lib/owner-access.mjs';
-import { openWorkspaceSession, checkWorkspaceSession, workspaceCookie } from '../netlify/lib/workspace-session.mjs';
+import { openWorkspaceSession, checkWorkspaceSession, recordIdentitySignIn, workspaceCookie } from '../netlify/lib/workspace-session.mjs';
 import { deliverNotification, enqueueQuote, runNotifications, mailSettings } from '../netlify/lib/notification-mail.mjs';
 import { contactLinks } from '../public/assets/enquiry-contact.js';
 import { defaults } from '../public/assets/business-defaults.js';
@@ -96,6 +96,24 @@ test('workspace sessions require an unexpired server record and a fresh Identity
   assert.equal(await checkWorkspaceSession(request, user, { now: now + 29 * minute, storage, touch: true }), now + 59 * minute);
   await assert.rejects(checkWorkspaceSession(request, user, { now: now + 59 * minute, storage, touch: true }), { status: 401 });
   await assert.rejects(openWorkspaceSession(naked, user, { freshIdentity: true, now: now + minute, storage }), { status: 401 });
+});
+
+test('a trusted Identity login event can open one workspace session when the profile sign-in time is stale', async () => {
+  const storage = memory(), now = Date.parse('2026-11-22T15:00:00Z'), minute = 60_000;
+  const request = new Request('https://towing.example/admin/');
+  const user = { id: 'owner-user', lastSignInAt: new Date(now - 10 * minute).toISOString() };
+  const signIn = (at, account = user) => openWorkspaceSession(request, account, { freshIdentity: true, now: at, storage });
+
+  await assert.rejects(signIn(now), { code: 'WORKSPACE_SIGN_IN_FRESHNESS' });
+  await recordIdentitySignIn(user, { now, storage });
+  await assert.rejects(signIn(now, { id: 'other-user' }), { code: 'WORKSPACE_SIGN_IN_FRESHNESS' });
+  assert.match(await signIn(now), /^[a-f0-9]{64}$/);
+  await assert.rejects(signIn(now + 1), { code: 'WORKSPACE_SIGN_IN_FRESHNESS' });
+
+  await recordIdentitySignIn(user, { now: now + minute, storage });
+  await assert.rejects(signIn(now + 7 * minute), { code: 'WORKSPACE_SIGN_IN_FRESHNESS' });
+  await recordIdentitySignIn(user, { now: now + 8 * minute, storage });
+  assert.match(await signIn(now + 8 * minute), /^[a-f0-9]{64}$/);
 });
 
 test('verified notifications cap quote volume, retry with one delivery key, and send only one pickup digest', async () => {

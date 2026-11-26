@@ -75,7 +75,7 @@ test('Google sign-in retrieves the authenticated account when runtime claims omi
     return latest;
   };
   assert.deepEqual(await loadIdentitySignIn(claims, load), latest);
-  assert.deepEqual(await loadIdentitySignIn(latest, async () => assert.fail('profile already includes sign-in time')), latest);
+  assert.deepEqual(await loadIdentitySignIn({ ...claims, lastSignInAt: '2026-01-01T00:00:00.000Z' }, load), latest);
   await assert.rejects(loadIdentitySignIn(claims, async () => ({ ...latest, id: 'different-user' })), { status: 403 });
   await assert.rejects(loadIdentitySignIn(claims, async () => ({ ...latest, roles: [] })), { status: 403 });
 });
