@@ -161,7 +161,10 @@ export function addLocationSuggestions(form) {
       if (text.length >= 5) lookupTimer = setTimeout(() => suggestAddresses(text, current), 350);
     }
 
-    field.addEventListener('focus', updateSuggestions);
+    field.addEventListener('focus', () => {
+      if (!field.readOnly && !manualFields.has(field)) loadCatalog().catch(() => {});
+      updateSuggestions();
+    });
     field.addEventListener('input', () => {
       if (field.value !== devicePickup?.label && field === fields[0]) devicePickup = undefined;
       if (field.value !== selectedAddresses.get(field)?.label) selectedAddresses.delete(field);

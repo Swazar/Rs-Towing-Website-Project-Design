@@ -9,22 +9,40 @@
   <link rel="icon" href="/assets/rs-logo.webp" type="image/webp">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400..800&amp;display=swap">
   <link rel="stylesheet" href="/assets/site.css">
-  <link rel="stylesheet" href="/assets/admin.css?v=9">
-  <link rel="stylesheet" href="/assets/admin-shell.css">
+  <link rel="stylesheet" href="/assets/admin.css?v=10">
+  <link rel="stylesheet" href="/assets/admin-shell.css?v=2">
   <link rel="stylesheet" href="/assets/admin-settings.css">
   <link rel="stylesheet" href="/assets/admin-email.css?v=7">
   <link rel="stylesheet" href="/assets/admin-assistant.css">
   <link rel="stylesheet" href="/assets/workspace-customization.css">
   <link rel="stylesheet" href="/assets/workspace-themes.css">
   <link rel="stylesheet" href="/assets/admin-login.css">
-  <script type="module" src="/assets/admin.bundle.js?v=9"></script>
+  <script type="module" src="/assets/admin.bundle.js?v=11"></script>
 </head>
 <body class="admin-page owner-login-screen">
   <a class="skip-link" href="#admin-main">Skip to workspace</a>
   <header class="owner-header">
     <a class="brand" href="/"><span class="header-logo"><img src="/assets/rs-logo.webp" width="276" height="186" alt=""></span><span>RS on the Go<span class="brand-caption">OWNER WORKSPACE</span></span></a>
     <div class="owner-header-main">
-      <div class="header-right"><a class="owner-external" href="/" target="_blank" rel="noopener" aria-label="View website (opens in a new tab)"><span>View website</span><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#external-link"/></svg></a><div class="header-account"><button type="button" class="profile-trigger" id="profile-open" aria-label="Open my profile" hidden><span class="owner-avatar" id="header-avatar" aria-hidden="true">RS</span><span class="profile-meta"><span class="account-name" id="header-profile-name">Owner</span><span class="account-role" id="header-profile-role">Owner account</span></span></button><button type="button" class="icon-button" id="owner-logout" aria-label="Sign out" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#log-out"/></svg></button></div></div>
+      <div class="header-right">
+        <a class="owner-external" href="/" target="_blank" rel="noopener" aria-label="View website (opens in a new tab)"><span>View website</span><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#external-link"/></svg></a>
+        <div class="header-notifications" id="workspace-notifications" hidden>
+          <button type="button" class="icon-button notification-trigger" aria-label="Notifications" aria-expanded="false" aria-controls="notification-panel">
+            <svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#bell"/></svg>
+            <span class="notification-badge" aria-hidden="true" hidden></span>
+          </button>
+          <section class="notification-panel" id="notification-panel" aria-labelledby="notification-heading" hidden>
+            <div class="notification-heading">
+              <h2 id="notification-heading" tabindex="-1">Notifications</h2>
+              <button type="button" class="icon-button notification-refresh" aria-label="Refresh notifications" title="Refresh notifications"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#refresh-cw"/></svg></button>
+            </div>
+            <p class="notification-feedback" role="status"></p>
+            <ul class="notification-list"></ul>
+            <div class="notification-footer"><button type="button" class="quiet-button notification-read-all" disabled>Mark all as read</button></div>
+          </section>
+        </div>
+        <div class="header-account"><button type="button" class="profile-trigger" id="profile-open" aria-label="Open my profile" hidden><span class="owner-avatar" id="header-avatar" aria-hidden="true">RS</span><span class="profile-meta"><span class="account-name" id="header-profile-name">Owner</span><span class="account-role" id="header-profile-role">Owner account</span></span></button><button type="button" class="icon-button" id="owner-logout" aria-label="Sign out" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#log-out"/></svg></button></div>
+      </div>
     </div>
   </header>
   <aside class="owner-sidebar" id="owner-sidebar" hidden>
@@ -50,7 +68,7 @@
         <p class="login-copyright">© <span id="login-year">2026</span> RS on the Go LLC. All rights reserved.</p>
       </div>
       <div class="login-form-side">
-        <a class="login-brand" href="/">RS on the Go LLC<span>TOWING &amp; HAULING</span></a>
+        <a class="login-brand" href="/">RS on the Go LLC<span>HAULING &amp; TRANSPORT</span></a>
         <div class="login-form-content">
           <h1 id="login-title">Welcome Back!</h1>
           <p class="login-intro" id="login-intro">Sign in to your admin dashboard.</p>
@@ -85,7 +103,39 @@
           <section class="workspace-panel followup-panel"><div class="panel-heading"><div><h2>Next up</h2><p>Follow-ups and feedback to check.</p></div><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#calendar-days"/></svg></div><div id="overview-attention"></div></section>
           </div>
           <div class="overview-column">
-          <section class="workspace-panel jobs-map-panel"><div class="panel-heading"><div><h2>Job locations</h2><p>Pickup and drop-off locations from your enquiries.</p></div><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#map-pin"/></svg></div><div class="map-selection"><label class="sr-only" for="overview-map-request">Show enquiry on map</label><select id="overview-map-request"><option value="">All open enquiries</option></select></div><div id="overview-job-map" class="overview-job-map" role="region" aria-label="Job pickup and drop-off locations"><p class="map-loading">Loading the map…</p></div><div class="map-card-footer"><div class="map-legend"><span>Pickup</span><span>Drop-off</span></div><button type="button" class="quiet-button" id="overview-map-route" disabled>Show driving route</button></div><p class="map-caption" id="overview-map-caption" role="status"></p></section>
+          <section class="workspace-panel jobs-map-panel" aria-labelledby="job-map-title">
+            <div class="panel-heading">
+              <h2 id="job-map-title">Job locations</h2>
+              <span class="job-map-heading-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#map-pin"/></svg></span>
+            </div>
+            <div class="map-selection">
+              <label for="overview-map-request">Enquiry</label>
+              <select id="overview-map-request"><option value="">All open enquiries</option></select>
+            </div>
+            <div class="job-map-summary" id="overview-map-summary" hidden>
+              <div class="job-map-meta" id="overview-map-meta"></div>
+              <ol class="job-map-stops" id="overview-map-stops" aria-label="Job stops"></ol>
+            </div>
+            <div class="job-map-frame">
+              <div id="overview-job-map" class="overview-job-map" role="region" aria-label="Job pickup and drop-off locations" hidden></div>
+              <div class="job-map-placeholder" id="overview-map-placeholder">
+                <p>Loading job locations…</p>
+              </div>
+              <button type="button" class="job-map-fit button button-outline" id="overview-map-fit" title="Show all visible stops" hidden>Fit stops</button>
+            </div>
+            <div class="map-card-footer">
+              <div class="map-legend" id="overview-map-legend" hidden>
+                <span><b class="job-stop-badge" aria-hidden="true">A</b> Pickup</span>
+                <span><b class="job-stop-badge" data-stop="dropoff" aria-hidden="true">B</b> Drop-off</span>
+              </div>
+              <p class="map-caption" id="overview-map-caption" role="status"></p>
+              <div class="job-map-actions" id="overview-map-actions" hidden>
+                <button type="button" class="button button-outline" id="overview-map-route" hidden>Preview route</button>
+                <a class="button button-outline" id="overview-map-directions" target="_blank" rel="noopener noreferrer" hidden>Google Maps <svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#external-link"/></svg></a>
+                <button type="button" class="quiet-button" id="overview-map-open">Open enquiry</button>
+              </div>
+            </div>
+          </section>
           <section class="workspace-panel quick-edit-panel" data-permission="content"><div class="panel-heading"><div><h2>Quick edits</h2><p>Keep customers in the loop.</p></div></div><div class="quick-edit-list"><button type="button" data-edit-section="availability"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#clock"/></svg><span><strong>Availability notice</strong><small>Add a temporary update for customers</small></span><svg class="ui-icon chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></button><button type="button" data-edit-section="contact"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#user-round"/></svg><span><strong>Contact & hours</strong><small>Update your business details</small></span><svg class="ui-icon chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></button></div></section>
           <details class="workspace-panel activity-panel" data-permission="activity"><summary><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#clock"/></svg><span>Recent changes</span><svg class="ui-icon section-chevron" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div id="recent-activity"></div></details>
           </div>

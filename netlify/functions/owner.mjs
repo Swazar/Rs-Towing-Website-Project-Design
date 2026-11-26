@@ -5,6 +5,7 @@ import { checkWorkspaceSession, closeWorkspaceSession, openWorkspaceSession, wor
 import { resolveSettingsImages } from '../lib/media-records.mjs';
 import { withMediaDefaults } from '../../public/assets/site-media.js';
 import { defaults } from '../../public/assets/business-defaults.js';
+import { publishedWebsiteContent, upgradeHaulingContent } from '../lib/website-content.mjs';
 import { isLocalPreview, json, sameOrigin, readRecord, writeRecord } from '../lib/store.mjs';
 import { listSubmissions } from '../lib/submissions.mjs';
 import { publicReview, text, validateSettings } from '../lib/validation.mjs';
@@ -77,20 +78,28 @@ export default async function owner(request) {
       if (id != null && (typeof id !== 'string' || !/^[\w-]{1,100}$/.test(id))) return json({ error: 'Choose a valid enquiry.' }, 400);
       const key = id ? 'enquiry/' + id : 'settings';
       const current = await readRecord(key);
-      if (request.method === 'GET') return json({ versions: versionsFor(key, current.data), revision: current.revision, current: activeData(current.data) });
+      if (request.method === 'GET') {
+        const versions = versionsFor(key, current.data);
+        const active = activeData(current.data);
+        return json({
+          versions: id ? versions : versions.map(entry => ({ ...entry, data: upgradeHaulingContent(entry.data) })),
+          revision: current.revision,
+          current: id ? active : upgradeHaulingContent(active),
+        });
+      }
       if (body.revision !== current.revision) return json({ error: 'This record changed. Reopen version history and try again.' }, 409);
       const version = versionsFor(key, current.data).find(entry => entry.id === body.version);
       if (!version) return json({ error: 'This version is unavailable.' }, 404);
-      if (!id) version.data = await resolveSettingsImages(validateSettings(version.data));
+      if (!id) version.data = await resolveSettingsImages(validateSettings(upgradeHaulingContent(version.data)));
       return json(await saveRecoverable(key, version.data, current, body.revision, actor, 'Restored previous version', id || 'Website content'));
     }
     if (action === 'content' && request.method === 'GET') {
       const saved = await readRecord('settings');
-      if (!permissions.includes('content')) return json({ data: withMediaDefaults(saved.data ? Object.fromEntries(Object.keys(defaults).map(key => [key, saved.data[key]])) : defaults), revision: null });
-      return json({ ...saved, data: withMediaDefaults(activeData(saved.data) ?? defaults) });
+      if (!permissions.includes('content')) return json({ data: publishedWebsiteContent(saved.data), revision: null });
+      return json({ ...saved, data: withMediaDefaults(upgradeHaulingContent(activeData(saved.data) ?? defaults)) });
     }
     if (action === 'content' && request.method === 'POST') {
-      const settings = await resolveSettingsImages(validateSettings(body.data));
+      const settings = await resolveSettingsImages(validateSettings(upgradeHaulingContent(body.data)));
       const current = await readRecord('settings');
       const saved = await saveRecoverable('settings', settings, current, body.revision, actor, 'Published website changes', 'Website content');
       return json(saved);

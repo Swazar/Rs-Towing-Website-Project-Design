@@ -11,7 +11,7 @@ export function assistantKey(request, env = process.env) {
 }
 
 export function containsPrivateDetails(question) {
-  const text = question.replace(/\b\d{4}-\d{2}-\d{2}\b/g, '').replace(/\bRS-(?:\d{6}|UNDATED)-(?:TOW|EQP|FRT|GEN)-\d{4,}\b/gi, '');
+  const text = question.replace(/\b\d{4}-\d{2}-\d{2}\b/g, '').replace(/\bRS-(?:\d{6}|UNDATED)-(?:VEH|EQP|FRT|GEN|TOW)-\d{4,}\b/gi, '');
   return /[\w.+-]+@[\w.-]+\.[a-z]{2,}|\b(?:(?:sk|gsk)[-_][\w-]{12,}|bearer\s+[\w.-]+|(?:password|api[ _-]?key|token|secret)\s*[:=]\s*\S+|my password is\s+\S+)/i.test(text) ||
     (text.match(/\+?\d[\d ().-]{7,}\d/g) || []).some(value => value.replace(/\D/g, '').length >= 10);
 }

@@ -1,8 +1,8 @@
 import { originalImages } from './site-media.js';
 export const defaults = {
   businessName: 'RS on the Go LLC',
-  headline: 'Towing & hauling across North Carolina',
-  description: 'We handle breakdowns, scheduled vehicle and equipment moves, and long-distance freight.',
+  headline: 'Hauling across North Carolina',
+  description: 'Plan a vehicle, equipment, or freight haul from Charlotte. Tell us what you’re moving and where it needs to go.',
   location: 'Charlotte, NC',
   hoursNote: 'Available 24/7',
   phone: '+12392465837',
@@ -14,7 +14,7 @@ export const defaults = {
   heroImage: originalImages.hero,
   contactImage: originalImages.contact,
   services: [
-    { title: 'Vehicle towing & transport', description: 'Local towing and longer-distance transport for cars, trucks, SUVs, and vehicles that can’t be driven.' },
+    { title: 'Scheduled vehicle hauling', description: 'Schedule trailer transport for a car, pickup, or SUV. Share the vehicle type and both locations so we can plan loading and delivery.' },
     { title: 'Equipment hauling', description: 'Skid steers, tractors, and other construction or agricultural equipment. Schedule one move or recurring pickups.' },
     { title: 'Freight & cargo transport', description: 'Flatbed hauling for palletized freight, oversized cargo, and time-sensitive loads. Share the load dimensions when requesting a quote.' },
   ],
@@ -24,8 +24,8 @@ export const defaults = {
   ],
   faqs: [
     { question: 'What areas do you serve?', answer: 'We’re based in Charlotte and serve North Carolina. We also take long-distance and interstate jobs. Include both locations so we can confirm your route.' },
-    { question: 'Can you move a vehicle that won’t start?', answer: 'Yes. Tell us if the vehicle can roll, steer, and brake so we can plan the pickup.' },
-    { question: 'Can I schedule a haul in advance?', answer: 'Yes. Include your preferred pickup date when requesting a quote. Call to check availability for an urgent job.' },
+    { question: 'What should I measure before pickup?', answer: 'Share the length, width, height, and approximate weight of the load. For equipment, include any attachments traveling with it.' },
+    { question: 'Can I schedule a haul in advance?', answer: 'Yes. Include your preferred pickup date and both locations. Dispatch will confirm availability for your route.' },
     { question: 'What information do you need for a quote?', answer: 'Send the pickup and drop-off addresses or cities, what needs to be moved, and your preferred timing. For equipment or freight, include the dimensions and weight if you know them.' },
     { question: 'How is a quote worked out?', answer: 'Share the route, vehicle or load details, and timing. We’ll review the job with you and confirm a price before you book.' },
   ],

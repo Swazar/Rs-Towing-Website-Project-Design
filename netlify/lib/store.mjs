@@ -1,6 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { mkdir, open, readFile, rename, unlink } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 
@@ -61,8 +61,11 @@ export async function* recordPages(prefix) {
   }
 }
 
+// Node resolves the preview data directory against the running server's working
+// directory. These mutable records must never become build-time dependencies.
+const localDirectory = join('.netlify', 'owner-preview');
 function localPath(key) {
-  return resolve(process.cwd(), '.netlify', 'owner-preview', Buffer.from(key).toString('hex') + '.json');
+  return join(localDirectory, Buffer.from(key).toString('hex') + '.json');
 }
 
 async function readLocal(key) {
@@ -75,8 +78,7 @@ async function readLocal(key) {
 }
 
 async function writeLocal(key, data, revision) {
-  const directory = resolve(process.cwd(), '.netlify', 'owner-preview');
-  await mkdir(directory, { recursive: true });
+  await mkdir(localDirectory, { recursive: true });
   const file = localPath(key);
   const lockPath = file + '.lock';
   let lock;

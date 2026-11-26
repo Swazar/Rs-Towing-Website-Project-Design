@@ -1,20 +1,14 @@
-import { node, icon, emptyState } from './admin-ui.js';
-import { calendarEvents, monthDays, dateKey, businessDateKey, locationPoint } from './admin-data.js';
+import { node, icon } from './admin-ui.js';
+import { calendarEvents, monthDays, dateKey, businessDateKey } from './admin-data.js';
 import { formatBusinessTime } from './admin-preferences.js';
-import { loadLeaflet, addBasemap } from './route-map.js';
+import { JobMap } from './admin-job-map.js';
 
 export class OperationsBoard {
-  constructor({ openEnquiry, editReminder, toggleReminder, notify, baseLocation, getPreferences }) {
-    Object.assign(this, { openEnquiry, editReminder, toggleReminder, notify, baseLocation, getPreferences });
+  constructor({ openEnquiry, editReminder, toggleReminder, notify, getPreferences }) {
+    Object.assign(this, { openEnquiry, editReminder, toggleReminder, notify, getPreferences });
     this.items = []; this.reminders = []; this.today = businessDateKey(); this.selectedDate = this.today;
     const now = new Date(this.today + 'T12:00:00'); this.month = new Date(now.getFullYear(), now.getMonth(), 1);
-    this.mapElement = document.querySelector('#overview-job-map');
-    this.mapSelect = document.querySelector('#overview-map-request');
-    this.routeButton = document.querySelector('#overview-map-route');
-    this.mapCaption = document.querySelector('#overview-map-caption');
-    this.routeCache = new Map(); this.mapVersion = 0;
-    this.mapSelect.addEventListener('change', () => this.updateMap());
-    this.routeButton.addEventListener('click', () => this.showRoadRoute());
+    this.map = new JobMap(document.querySelector('.jobs-map-panel'), openEnquiry);
     document.querySelector('#calendar-previous').addEventListener('click', () => this.changeMonth(-1));
     document.querySelector('#calendar-next').addEventListener('click', () => this.changeMonth(1));
     document.querySelector('#calendar-today').addEventListener('click', () => this.selectDay(businessDateKey()));
@@ -23,17 +17,9 @@ export class OperationsBoard {
   update(items, reminders) {
     this.items = items.filter(item => (item.form_name || item.data['form-name']) === 'quote-request'); this.reminders = reminders;
     this.events = calendarEvents(this.items, reminders); this.renderCalendar();
-    // A hidden map has no useful size and should not load tiles or initialize.
-    if (this.mapElement.closest('[data-workspace-panel]')?.hidden) { this.mapSignature = undefined; return; }
-    const previous = this.mapSelect.value, active = this.items.filter(item => item.state?.status !== 'Closed');
-    const signature = JSON.stringify([this.baseLocation(), active.map(item => [item.id, item.data.name, item.data.pickup, item.data.dropoff, item.data.pickup_point, item.data.dropoff_point, item.data.pickup_accuracy, item.data.dropoff_accuracy])]);
-    if (signature === this.mapSignature) return;
-    this.mapSignature = signature;
-    this.mapSelect.replaceChildren(new Option('All open enquiries', ''));
-    active.forEach(item => this.mapSelect.add(new Option(item.data.name + ' · ' + (item.data.service || 'Enquiry'), item.id)));
-    this.mapSelect.value = active.some(item => item.id === previous) ? previous : active[0]?.id || '';
-    this.updateMap();
+    this.map.update(this.items);
   }
+  setMapActive(active) { this.map.setActive(active); }
   changeMonth(amount) {
     this.month = new Date(this.month.getFullYear(), this.month.getMonth() + amount, 1);
     this.selectedDate = dateKey(this.month); this.renderCalendar();
@@ -79,70 +65,6 @@ export class OperationsBoard {
       button.addEventListener('click', () => event.kind === 'reminder' ? this.editReminder(this.reminders.find(item => item.id === event.id)) : this.openEnquiry(this.items.find(item => item.id === event.itemId)));
       row.append(button); agenda.append(row);
     });
-  }
-  async ensureMap() {
-    if (this.map) return;
-    if (this.mapPromise) return this.mapPromise;
-    this.mapPromise = (async () => {
-      const [L, places] = await Promise.all([loadLeaflet(), fetch('/assets/us-places.json').then(response => { if (!response.ok) throw new Error('Locations unavailable'); return response.json(); })]);
-      this.L = L; this.places = places; this.mapElement.replaceChildren();
-      this.basePoint = locationPoint({ data: { pickup: this.baseLocation() } }, 'pickup', places)?.point;
-      this.map = L.map(this.mapElement, { scrollWheelZoom: false, zoomControl: true }).setView(this.basePoint || [39, -98], this.basePoint ? 9 : 4);
-      addBasemap(this.map);
-      this.layers = L.featureGroup().addTo(this.map); this.road = L.layerGroup().addTo(this.map);
-      if (typeof ResizeObserver !== 'undefined') {
-        this.mapResize = new ResizeObserver(() => { if (this.mapElement.offsetWidth) this.map.invalidateSize({ pan: false }); }); this.mapResize.observe(this.mapElement);
-      }
-    })().catch(error => { this.mapPromise = undefined; throw error; });
-    return this.mapPromise;
-  }
-  async updateMap() {
-    const version = ++this.mapVersion; this.routeButton.disabled = true; this.mapCaption.textContent = 'Loading job locations…';
-    try {
-      await this.ensureMap(); if (version !== this.mapVersion) return;
-      this.basePoint = locationPoint({ data: { pickup: this.baseLocation() } }, 'pickup', this.places)?.point;
-      this.layers.clearLayers(); this.road.clearLayers();
-      const selected = this.items.find(item => item.id === this.mapSelect.value), items = selected ? [selected] : this.items.filter(item => item.state?.status !== 'Closed');
-      let mapped = 0, approximate = 0, missing = 0;
-      for (const item of items) for (const name of ['pickup', 'dropoff']) {
-        if (!item.data[name] || item.data[name] === 'Unsure') continue;
-        const location = locationPoint(item, name, this.places); if (!location) { missing++; continue; }
-        mapped++; if (location.approximate) approximate++;
-        const popup = node('div', undefined, 'job-map-popup'); popup.append(node('strong', item.data.name || 'Customer'), node('p', (name === 'pickup' ? 'Pickup · ' : 'Drop-off · ') + item.data[name]));
-        if (location.approximate) popup.append(node('small', 'Approximate location · confirm the street address'));
-        const open = node('button', 'Open enquiry', 'quiet-button'); open.type = 'button'; open.addEventListener('click', () => this.openEnquiry(item)); popup.append(open);
-        const color = name === 'pickup' ? '#c31520' : '#1761bf';
-        const marker = this.L.marker(location.point, { icon: this.L.divIcon({ className: 'job-location-marker', html: '<span style="--pin-color:' + color + '"></span>', iconSize: [22, 22], iconAnchor: [11, 11] }), title: (name === 'pickup' ? 'Pickup' : 'Drop-off') + ': ' + item.data[name], alt: (name === 'pickup' ? 'Pickup' : 'Drop-off') + ' for ' + item.data.name });
-        marker.bindPopup(popup).addTo(this.layers);
-      }
-      this.map.invalidateSize({ pan: false });
-      if (mapped) this.map.fitBounds(this.layers.getBounds(), { padding: [35, 35], maxZoom: 11, animate: false });
-      else this.map.setView(this.basePoint || [39, -98], this.basePoint ? 9 : 4, { animate: false });
-      this.mapCaption.textContent = mapped ? mapped + (mapped === 1 ? ' location shown.' : ' locations shown.') + (approximate ? ' Some pins show approximate city or street locations.' : '') + (missing ? ' ' + missing + ' location(s) need confirmation.' : '') : items.length ? 'These locations need confirmation. Open the enquiry to see the entered addresses.' : 'No open mapped enquiries. New job locations will appear here.';
-      this.routeButton.disabled = !selected || !locationPoint(selected, 'pickup', this.places) || !locationPoint(selected, 'dropoff', this.places);
-    } catch {
-      this.mapElement.replaceChildren(emptyState('Map unavailable', 'You can still open enquiries and use driving directions.', 'map-pin'));
-      const retry = node('button', 'Retry map', 'quiet-button'); retry.type = 'button'; retry.addEventListener('click', () => this.updateMap()); this.mapElement.append(retry);
-      this.mapCaption.textContent = 'The map could not load. Your enquiry data is still available.';
-    }
-  }
-  async showRoadRoute() {
-    const item = this.items.find(entry => entry.id === this.mapSelect.value); if (!item || !this.map) return;
-    const pickup = locationPoint(item, 'pickup', this.places), dropoff = locationPoint(item, 'dropoff', this.places); if (!pickup || !dropoff) return;
-    const version = this.mapVersion, key = pickup.point.join(',') + '|' + dropoff.point.join(',');
-    this.routeButton.disabled = true; this.mapCaption.textContent = 'Finding the driving route…';
-    try {
-      let route = this.routeCache.get(key);
-      if (!route) {
-        const response = await fetch('/.netlify/functions/route-preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pickup: pickup.point.join(','), dropoff: dropoff.point.join(',') }) });
-        if (!response.ok) throw new Error('Route unavailable'); route = await response.json(); this.routeCache.set(key, route);
-      }
-      if (version !== this.mapVersion) return;
-      this.road.clearLayers(); const line = this.L.polyline(route.path, { color: '#1761bf', weight: 5 }).addTo(this.road);
-      this.map.fitBounds(line.getBounds(), { padding: [25, 25], animate: false });
-      this.mapCaption.textContent = route.miles.toLocaleString('en-US') + ' driving miles · about ' + route.minutes + ' min' + (pickup.approximate || dropoff.approximate ? ' · Approximate endpoints; confirm the street addresses.' : '');
-    } catch { if (version === this.mapVersion) this.mapCaption.textContent = 'Driving route unavailable. The location pins are still shown; use driving directions in the enquiry.'; }
-    finally { if (version === this.mapVersion) this.routeButton.disabled = false; }
   }
 }
 

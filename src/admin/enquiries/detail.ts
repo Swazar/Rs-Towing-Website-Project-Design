@@ -1,6 +1,6 @@
 import { node, icon, initials, picture, statusLabel } from '../../../public/assets/admin-ui.js';
 import { contactLinks, priceInput, priceLabel } from '../../../public/assets/enquiry-contact.js';
-import { renderRoadRoute } from '../../../public/assets/route-map.js';
+import { drivingDirectionsUrl, renderRoadRoute } from '../../../public/assets/route-map.js';
 import { describeJobNumber, enquiryHash } from '../../domain/jobs/job-number.ts';
 import { enquiryStatuses, type Enquiry, type EnquiryDraft } from '../../domain/jobs/types.ts';
 import { formField as field } from '../components/form-field.ts';
@@ -88,10 +88,8 @@ function addRouteTools(panel: HTMLElement, item: Enquiry): () => void {
   const cleanup = () => { controller?.abort(); dispose?.(); };
   if (!pickup || !dropoff || dropoff === 'Unsure') return cleanup;
   const tools = node('div', undefined, 'owner-route-actions');
-  const directions = new URL('https://www.google.com/maps/dir/');
-  directions.search = new URLSearchParams({ api: '1', origin: pickup, destination: dropoff, travelmode: 'driving' }).toString();
   const link = node('a', 'Open driving directions');
-  link.href = directions.href;
+  link.href = drivingDirectionsUrl(pickup, dropoff);
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
   tools.append(link);
@@ -153,7 +151,7 @@ function renderRoute(panel: HTMLElement, item: Enquiry, time: DetailOptions['tim
   const visual = node('div', undefined, 'load-visual'), copy = node('div');
   const service = data.service || '';
   const image = /equipment/i.test(service) ? '/assets/equipment-transport.webp'
-    : /freight/i.test(service) ? '/assets/flatbed-freight.webp' : '/assets/towing-stock.webp';
+    : /freight/i.test(service) ? '/assets/flatbed-freight.webp' : '/assets/hauling-hero.webp';
   copy.append(node('strong', service), node('small', 'Service reference image'));
   visual.append(picture(image, ''), copy);
   panel.append(visual);

@@ -1,3 +1,4 @@
+import { adaptServiceList } from './service-list.js';
 import { enhanceQuoteForm } from './quote-form.js';
 import { contentReady } from './site-content.js';
 import { enableReviewCounter } from './review-form.js';
@@ -20,7 +21,14 @@ menuButton.addEventListener('click', () => {
 });
 
 navigation.addEventListener('click', event => {
-  if (event.target.closest('a')) setMenuOpen(false);
+  const link = event.target.closest('a');
+  if (!link || !navigation.hasAttribute('data-open')) return;
+  setMenuOpen(false);
+  const heading = document.querySelector(link.hash)?.querySelector('h2');
+  if (heading) {
+    heading.tabIndex = -1;
+    heading.focus({ preventScroll: true });
+  }
 });
 
 document.addEventListener('keydown', event => {
@@ -30,7 +38,17 @@ document.addEventListener('keydown', event => {
   }
 });
 
+window.matchMedia('(max-width: 760px)').addEventListener('change', () => setMenuOpen(false));
+adaptServiceList(document.querySelector('.service-list'));
 enhanceQuoteForm();
+
+const dispatchActions = document.querySelector('.dispatch-actions');
+if (dispatchActions && 'ResizeObserver' in window) {
+  new ResizeObserver(() => {
+    const height = dispatchActions.offsetHeight;
+    if (height) document.documentElement.style.setProperty('--dispatch-height', height + 'px');
+  }).observe(dispatchActions);
+}
 
 const faq = document.querySelector('.faq-list');
 document.addEventListener('click', event => {

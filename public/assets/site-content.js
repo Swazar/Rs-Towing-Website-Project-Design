@@ -8,12 +8,19 @@ export const contentReady = fetch('/.netlify/functions/site-content')
   })
   .catch(() => ({ settings: defaults, reviews: null, localPreview: ['localhost', '127.0.0.1'].includes(location.hostname) }));
 
+// Keep each slot's responsive dimensions when the owner previews or replaces a photo.
+function applySiteImage(element, image) {
+  if (!element) return;
+  element.dataset.slotSizes ??= element.sizes;
+  applyImage(element, image, element.dataset.slotSizes);
+}
+
 export function applyContent(settings, root = document) {
   settings = withMediaDefaults(settings);
-  applyImage(root.querySelector('.hero-image'), settings.heroImage);
-  applyImage(root.querySelector('.help-photo img'), settings.contactImage);
-  const credit = root.querySelector('.help-photo figcaption');
-  if (credit) credit.hidden = settings.contactImage.src !== originalImages.contact.src;
+  applySiteImage(root.querySelector('.hero-image'), settings.heroImage);
+  applySiteImage(root.querySelector('.help-photo img'), settings.contactImage);
+  const freightTip = root.querySelector('.help-photo figcaption');
+  if (freightTip) freightTip.hidden = settings.contactImage.src !== originalImages.contact.src;
   for (const field of ['headline', 'description', 'serviceArea']) {
     root.querySelectorAll(`[data-content="${field}"]`).forEach(node => { node.textContent = settings[field]; });
   }
@@ -26,7 +33,7 @@ export function applyContent(settings, root = document) {
     link.href = 'sms:' + settings.phone + (message ? '?' + message : '');
   });
   root.querySelectorAll('a[href^="mailto:"]').forEach(link => { link.href = 'mailto:' + settings.email; });
-  const phoneText = root.querySelector('#tow-help strong + span');
+  const phoneText = root.querySelector('#haul-help strong + span');
   const digits = settings.phone.replace(/\D/g, '');
   const displayPhone = digits.length === 11 && digits.startsWith('1')
     ? `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}` : settings.phone;
@@ -47,7 +54,7 @@ export function applyContent(settings, root = document) {
   root.querySelectorAll('.work-grid figure').forEach((figure, index) => {
     const item = settings.gallery[index];
     if (item) {
-      applyImage(figure.querySelector('img'), item);
+      applySiteImage(figure.querySelector('img'), item);
       figure.querySelector('figcaption').textContent = item.caption;
     }
   });

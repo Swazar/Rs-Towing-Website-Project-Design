@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { JSDOM } from 'jsdom';
+import { adaptServiceList } from '../public/assets/service-list.js';
 import { LiquidNavigation } from '../public/assets/admin-navigation.js';
 
 test('glass navigation retargets interrupted motion and snaps on reduced motion or resize', () => {
@@ -44,5 +45,33 @@ test('glass navigation retargets interrupted motion and snaps on reduced motion 
   assert.equal(buttons[0].getAttribute('aria-current'), 'page', 'decoration never changes the accessible navigation state');
   navigation.destroy();
   assert.equal(menu.querySelector('.nav-liquid-glass'), null);
+  dom.window.close();
+});
+
+test('resizing a published service preserves the heading, quote shortcut and keyboard focus', () => {
+  const dom = new JSDOM('<section><article class="service-row"><h3>Vehicle hauling</h3><p>Local moves</p><a href="#contact">Get a quote</a></article></section>');
+  const page = dom.window.document;
+  let resize;
+  const query = { matches: true, addEventListener(_type, listener) { resize = listener; } };
+  dom.window.matchMedia = () => query;
+  const list = page.querySelector('section');
+  const heading = list.querySelector('h3');
+  const quote = list.querySelector('a');
+  adaptServiceList(list);
+  const details = list.querySelector('details');
+  assert.equal(details.open, false);
+  assert.equal(details.querySelector('summary h3'), heading);
+  heading.textContent = 'Updated service';
+  details.open = true;
+  quote.focus();
+  query.matches = false;
+  resize();
+  assert.equal(list.querySelector('details'), null);
+  assert.equal(list.querySelector('h3').textContent, 'Updated service');
+  assert.equal(page.activeElement, quote);
+  query.matches = true;
+  resize();
+  assert.equal(list.querySelector('details').open, true);
+  assert.equal(page.activeElement, quote);
   dom.window.close();
 });

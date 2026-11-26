@@ -1,3 +1,4 @@
+import { validDate } from '../../src/domain/jobs/dates.ts';
 import { defaults, usStates } from '../../public/assets/business-defaults.js';
 import { originalImages, builtinImage, imageId, imagePositions } from '../../public/assets/site-media.js';
 
@@ -49,7 +50,12 @@ export function validateSubmission(data) {
   const name = data['form-name'];
   if (!['quote-request', 'customer-review'].includes(name)) throw Object.assign(new Error('Unknown form.'), { status: 400 });
   if (data['bot-field']) throw Object.assign(new Error('Submission could not be accepted.'), { status: 400 });
+  if (data.email) {
+    const email = text(data.email, 254, 'email');
+    if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)) throw Object.assign(new Error('Check the email address.'), { status: 400 });
+  }
   if (name === 'customer-review') {
+    text(data.first_name ?? '', 80, 'first name');
     text(data.review, 800, 'feedback', true);
     if (![1, 2, 3, 4, 5].includes(Number(data.rating))) throw Object.assign(new Error('Choose a rating.'), { status: 400 });
   } else {
@@ -59,7 +65,7 @@ export function validateSubmission(data) {
     if (!['Today', 'Specific date', 'Flexible'].includes(data.pickup_timing)) {
       throw Object.assign(new Error('Choose pickup timing.'), { status: 400 });
     }
-    if (data.pickup_timing === 'Specific date' && !/^\d{4}-\d{2}-\d{2}$/.test(data.pickup_date || '')) {
+    if (data.pickup_timing === 'Specific date' && !validDate(data.pickup_date)) {
       throw Object.assign(new Error('Choose a preferred pickup date.'), { status: 400 });
     }
     for (const field of ['pickup_state', 'dropoff_state']) {

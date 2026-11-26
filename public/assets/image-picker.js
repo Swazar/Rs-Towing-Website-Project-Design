@@ -109,7 +109,9 @@ export class ImagePicker {
     more.disabled = true; retry.hidden = true; info.textContent = 'Loading your images…';
     if (reset) {
       this.library.replaceChildren(); const originals = node('div', undefined, 'image-library-grid');
-      Object.entries(originalImages).forEach(([key, image]) => originals.append(this.libraryTile({ ...image, name: { hero: 'Original homepage photo', contact: 'Original contact photo', gallery0: 'Equipment transport', gallery1: 'Flatbed freight' }[key] })));
+      for (const [key, name] of [['hero', 'Original homepage photo'], ['gallery0', 'Equipment transport'], ['gallery1', 'Flatbed freight']]) {
+        originals.append(this.libraryTile({ ...originalImages[key], name }));
+      }
       this.library.append(node('h3', 'Original photos'), originals, node('h3', 'Your uploads')); this.offset = 0;
     }
     try {

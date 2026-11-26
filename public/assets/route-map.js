@@ -23,6 +23,12 @@ export function loadLeaflet() {
 
 export function addBasemap(map) { return mapTools.addBasemap(map); }
 
+export function drivingDirectionsUrl(origin, destination) {
+  const url = new URL('https://www.google.com/maps/dir/');
+  url.search = new URLSearchParams({ api: '1', origin, destination, travelmode: 'driving' }).toString();
+  return url.href;
+}
+
 export async function renderRoadRoute(element, route, pins) {
   const L = await loadLeaflet();
   if (!element.isConnected) return () => {};
@@ -55,9 +61,7 @@ export function addRoutePreview(form, locations, validateRoute) {
     const origin = pointFor('pickup')?.join(',');
     const destination = pointFor('dropoff')?.join(',');
     if (!origin || !destination) return;
-    const directions = new URL('https://www.google.com/maps/dir/');
-    directions.search = new URLSearchParams({ api: '1', origin, destination, travelmode: 'driving' });
-    link.href = directions.href;
+    link.href = drivingDirectionsUrl(origin, destination);
     link.hidden = false;
   }
 

@@ -6,6 +6,7 @@ import { resolve, dirname, basename } from 'node:path';
 import sharp from 'sharp';
 import { randomUUID } from 'node:crypto';
 import { defaults } from '../public/assets/business-defaults.js';
+import { publishedWebsiteContent, upgradeHaulingContent } from '../netlify/lib/website-content.mjs';
 import { originalImages, imageId, mediaSrc, withMediaDefaults } from '../public/assets/site-media.js';
 import { checkImageFile } from '../public/assets/image-picker.js';
 import { validateSettings } from '../netlify/lib/validation.mjs';
@@ -56,4 +57,24 @@ test('uploads strip metadata, resize, stay private until publication, and suppor
     const target = resolve(directory), parent = resolve(tmpdir());
     if (dirname(target) === parent && basename(target).startsWith('rs-media-test-')) await rm(target, { recursive: true, force: true });
   }
+});
+
+test('old saved website versions show hauling services while preserving owner edits and private history', () => {
+  const saved = structuredClone(defaults);
+  saved.headline = 'Towing & hauling across North Carolina';
+  saved.services[0] = { title: 'Vehicle towing & transport', description: 'Call our dispatcher before arrival.' };
+  saved.contactImage = { src: '/assets/towing-stock.webp', alt: 'Retired stock image', position: 'center' };
+  saved.gallery[1] = { ...saved.contactImage, caption: 'Retired stock image' };
+  saved.faqs[1] = { question: 'Can you move a vehicle that won’t start?', answer: 'Yes. Tell us if the vehicle can roll, steer, and brake so we can plan the pickup.' };
+  saved.history = [{ subject: 'Private change' }];
+  const current = publishedWebsiteContent(saved);
+  assert.equal(current.headline, defaults.headline);
+  assert.equal(current.services[0].title, 'Scheduled vehicle hauling');
+  assert.equal(current.services[0].description, saved.services[0].description);
+  assert.deepEqual(current.faqs[1], defaults.faqs[1]);
+  assert.equal(current.contactImage.src, originalImages.contact.src);
+  assert.deepEqual(current.gallery[1], defaults.gallery[1]);
+  assert.equal(current.history, undefined);
+  assert.equal(saved.contactImage.src, '/assets/towing-stock.webp');
+  assert.doesNotThrow(() => validateSettings(upgradeHaulingContent(saved)));
 });

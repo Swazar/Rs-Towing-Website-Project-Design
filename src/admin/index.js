@@ -19,6 +19,7 @@ import { recoveryPreview } from '../../public/assets/admin-recovery.js';
 import { WorkspaceAssistant } from '../../public/assets/admin-assistant.js';
 import { WorkspaceEmail } from './email.ts';
 import { SubmissionBackupsPanel } from './submission-backups.ts';
+import { WorkspaceNotifications } from './notifications.ts';
 
 clearLoginQuery(window.location, window.history);
 const $ = selector => document.querySelector(selector);
@@ -33,6 +34,7 @@ const email = new WorkspaceEmail(emailView, api);
 let items = [], localPreview = false;
 let permissions = [], reminders = { data: [], revision: null }, activity = [], profile = { data: null, revision: null }, sessionUser, currentReminder;
 let sessionLocked = false;
+let inboxRequest = 0;
 const idle = new WorkspaceIdle({
   dialog: $('#workspace-idle-dialog'),
   touch: () => api('session-touch', {}),
@@ -59,6 +61,17 @@ const quotes = () => items.filter(isQuote);
 const reviews = () => items.filter(item => (item.form_name || item.data['form-name']) === 'customer-review');
 const date = value => formatTimestamp(value, profile.data);
 const shortDate = value => value ? new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: preferences(profile.data).timeZone }) : '';
+const notifications = new WorkspaceNotifications($('#workspace-notifications'), {
+  formatDate: date,
+  refresh: loadItems,
+  openEnquiry: showRequest,
+  openReview: item => {
+    $('#review-filter').value = 'pending';
+    renderReviews();
+    switchView('reviews');
+    previewReview(item);
+  },
+});
 const login = createAdminLogin({ api, completeAccess: completeOwnerAccess, googleSignIn: signInWithGoogle, onSignedIn: start });
 const announce = (text, options) => {
   if (!signIn.hidden) { notice.hide(); login.message(text, options); }
@@ -69,6 +82,7 @@ function showLogin() {
   workspace.hidden = true;
   assistant.setAvailable(false);
   email.reset();
+  notifications.stop();
   idle.stop();
   workspaceLayout.clear();
   accountSettings.setActive(false);
@@ -124,6 +138,7 @@ function switchView(view, jobNumber) {
   $('#owner-eyebrow').textContent = eyebrow; $('#owner-eyebrow').hidden = !eyebrow;
   $('#workspace-description').textContent = description; $('#workspace-description').hidden = !description;
   document.querySelectorAll('.owner-view').forEach(section => { section.hidden = section !== activeView; });
+  operations.setMapActive(view === 'overview');
   document.querySelectorAll('.owner-navigation [data-owner-view]').forEach(button => {
     if (button.dataset.ownerView === view) button.setAttribute('aria-current', 'page');
     else button.removeAttribute('aria-current');
@@ -169,7 +184,8 @@ function showRequest(item) {
   switchView('enquiries', item.jobNumber);
 }
 
-function renderOverview() {
+function renderOverview(inboxFresh = false) {
+  notifications.update(items, inboxFresh);
   const all = quotes();
   const newCount = all.filter(item => !item.state || item.state.status === 'New').length;
   const active = all.filter(item => item.state && ['Contacted', 'Quoted', 'Booked'].includes(item.state.status)).length;
@@ -298,11 +314,14 @@ function renderReviews() {
 }
 
 async function loadItems() {
-  const result = await api('list'); items = result.items;
+  const request = ++inboxRequest;
+  const result = await api('list');
+  if (request !== inboxRequest || !signIn.hidden) return;
+  items = result.items;
   reminders = result.reminders || { data: [], revision: null }; activity = result.activity || [];
   renderQuoteAlerts(result.quoteAlerts);
   enquiries.setItems(quotes());
-  renderReviews(); renderOverview();
+  renderReviews(); renderOverview(true);
 }
 
 const backupsPanel = new SubmissionBackupsPanel($('#submission-backups'), {
@@ -361,7 +380,7 @@ function applyProfile() {
   $('#owner-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', timeZone: preferences(profile.data).timeZone });
 }
 
-const operations = new OperationsBoard({ openEnquiry: showRequest, editReminder: openReminder, toggleReminder: (task, done) => saveReminder({ ...task, done }), notify: text => announce(text, { tone: 'error' }), baseLocation: () => website.published?.location || 'Charlotte, NC', getPreferences: () => profile.data });
+const operations = new OperationsBoard({ openEnquiry: showRequest, editReminder: openReminder, toggleReminder: (task, done) => saveReminder({ ...task, done }), notify: text => announce(text, { tone: 'error' }), getPreferences: () => profile.data });
 document.querySelectorAll('[data-close-dialog]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.closeDialog).close()));
 $('#reminder-form').addEventListener('submit', event => {
   event.preventDefault(); const button = event.submitter, form = event.currentTarget;
@@ -409,6 +428,7 @@ async function start() {
     $('#overview-metrics').classList.toggle('staff-metrics', !permissions.includes('reviews'));
     $('#owner-preview-note').hidden = !localPreview; $('#owner-logout').hidden = localPreview; $('#owner-account').textContent = session.user.email;
     signIn.hidden = true; workspace.hidden = false; $('#owner-sidebar').hidden = false;
+    notifications.start(session.user.id, permissions.includes('reviews'));
     document.body.classList.remove('owner-login-screen'); document.body.classList.add('owner-authenticated'); announce('');
     const [result, savedProfile] = await Promise.all([api('content'), api('profile')]); profile = savedProfile; applyProfile();
     website.load(result);

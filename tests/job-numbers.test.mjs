@@ -28,8 +28,11 @@ test('job numbers group by Eastern received month and service and grow beyond fo
   assert.deepEqual(jobNumberGroup('2026-12-01T04:59:00Z', 'Equipment hauling'), { period: '202611', code: 'EQP' });
   assert.deepEqual(jobNumberGroup('2026-12-01T05:00:00Z', 'Freight or cargo transport'), { period: '202612', code: 'FRT' });
   assert.deepEqual(jobNumberGroup('unavailable', 'Other'), { period: 'UNDATED', code: 'GEN' });
+  assert.deepEqual(jobNumberGroup('2026-12-01T05:00:00Z', 'Scheduled vehicle hauling'), { period: '202612', code: 'VEH' });
+  assert.equal(enquiryLinkNumber('#enquiries/rs-202612-veh-0001'), 'RS-202612-VEH-0001');
+  assert.match(describeJobNumber('RS-202612-VEH-0001'), /Scheduled vehicle hauling/);
   assert.equal(formatJobNumber('202611', 'TOW', 10000), 'RS-202611-TOW-10000');
-  assert.match(describeJobNumber('RS-202611-TOW-0001'), /November 2026.*Vehicle towing.*0001/);
+  assert.match(describeJobNumber('RS-202611-TOW-0001'), /November 2026.*Vehicle transport.*0001/);
   assert.equal(enquiryLinkNumber('#enquiries/rs-202611-tow-0001'), 'RS-202611-TOW-0001');
   assert.equal(enquiryLinkNumber('#enquiries/anything-else'), undefined);
 });

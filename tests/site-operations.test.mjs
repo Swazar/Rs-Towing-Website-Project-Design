@@ -26,7 +26,7 @@ function store() {
 
 const quote = {
   'form-name': 'quote-request', name: 'Fixture customer', pickup: 'Charlotte, NC', dropoff: 'Raleigh, NC',
-  phone: '202-555-0100', service: 'Vehicle towing or transport', pickup_timing: 'Flexible', details: 'Test load',
+  phone: '202-555-0100', service: 'Scheduled vehicle hauling', pickup_timing: 'Flexible', details: 'Test load',
 };
 const created_at = '2026-11-22T14:00:00.000Z';
 

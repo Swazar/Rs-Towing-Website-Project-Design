@@ -26,6 +26,8 @@ export function enhanceQuoteForm() {
   const status = form.querySelector('.submit-status');
   const modeButton = form.querySelector('.route-mode-toggle');
   const automaticFields = form.querySelector('#automatic-locations');
+  form.querySelector('.route-mode-tools').hidden = false;
+  form.querySelector('.quote-reset').hidden = false;
   let manualMode = false;
   let automaticCache = { pickup: '', dropoff: '', selected: {} };
   let activeStep = 0;
@@ -91,7 +93,7 @@ export function enhanceQuoteForm() {
       }
       wasUndecided = undecided;
     }
-    const groupName = { 'Vehicle towing or transport': 'vehicle', 'Urgent or same-day pickup': 'vehicle',
+    const groupName = { 'Scheduled vehicle hauling': 'vehicle',
       'Equipment hauling': 'freight', 'Freight or cargo transport': 'freight' }[service.value];
     for (const group of form.querySelectorAll('[data-load-fields]')) {
       group.hidden = group.dataset.loadFields !== groupName;
@@ -177,6 +179,9 @@ export function enhanceQuoteForm() {
     try {
       const draft = JSON.parse(sessionStorage.getItem(draftKey));
       if (!draft || draft.version !== 1 || Date.now() - draft.savedAt > draftLifetime) return;
+      // Older drafts used the retired service menu. Keep their route and load details.
+      if (draft.values.service === 'Vehicle towing or transport') draft.values.service = 'Scheduled vehicle hauling';
+      if (draft.values.service === 'Urgent or same-day pickup') draft.values.service = 'Other or unsure';
       for (const [name, value] of Object.entries(draft.values)) {
         const field = form.elements[name];
         if (!field || field.type === 'hidden') continue;
@@ -194,7 +199,9 @@ export function enhanceQuoteForm() {
       previousDropoffPlace = draft.previousDropoffPlace;
       wasUndecided = form.elements.dropoff_undecided.checked;
       if (/^[a-f0-9-]{36}$/.test(draft.requestId)) requestId = draft.requestId;
-      await locations.prepare();
+      if (!manualMode && (form.elements.pickup.value || form.elements.dropoff.value)) {
+        await locations.prepare();
+      }
       locations.restore(draft.selected);
       updateConditionalFields();
       showStep(Number.isInteger(draft.activeStep) ? draft.activeStep : 0);
@@ -222,6 +229,8 @@ export function enhanceQuoteForm() {
     steps[0].querySelectorAll('[aria-invalid]').forEach(field => setError(field, ''));
     updateConditionalFields();
     const region = form.querySelector('.location-mode-content');
+    if (manualMode) region.querySelector('.manual-title').focus();
+    else form.elements.pickup.focus();
     if (window.matchMedia?.('(prefers-reduced-motion: no-preference)').matches && region.animate) {
       region.animate([{ opacity: .25, transform: 'translateY(5px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 180, easing: 'ease-out' });
     }
@@ -295,13 +304,14 @@ export function enhanceQuoteForm() {
   form.noValidate = true;
   updateConditionalFields();
   steps.forEach((step, i) => { step.hidden = i !== 0; });
-  const restored = restoreDraft().then(() => showStep(activeStep));
+  let restored;
   addRoutePreview(form, locations, () => validateStep(steps[0]));
   for (const trigger of document.querySelectorAll('[data-quote]')) {
     trigger.setAttribute('aria-haspopup', 'dialog');
     trigger.addEventListener('click', async event => {
       if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
       event.preventDefault();
+      restored ??= restoreDraft().then(() => showStep(activeStep));
       await restored;
       if (dialog.open) return;
       opener = trigger;
@@ -312,13 +322,18 @@ export function enhanceQuoteForm() {
       if (trigger.dataset.service) {
         service.value = trigger.dataset.service; updateConditionalFields(); showStep(0);
       }
-      dialog.showModal(); locations.prepare();
+      dialog.showModal();
     });
   }
   dialog.querySelector('.quote-close').addEventListener('click', () => dialog.close());
   success.querySelector('.quote-done').addEventListener('click', () => dialog.close());
   dialog.addEventListener('close', () => {
     if (success.hidden) saveDraft();
-    opener?.focus({ preventScroll: true });
+    const returnTo = opener?.closest('details:not([open])')?.querySelector('summary') || opener;
+    returnTo?.focus({ preventScroll: true });
+    if (returnTo && document.activeElement !== returnTo) {
+      const visibleTrigger = [...document.querySelectorAll('[data-quote]')].find(link => link.getClientRects().length);
+      visibleTrigger?.focus({ preventScroll: true });
+    }
   });
 }

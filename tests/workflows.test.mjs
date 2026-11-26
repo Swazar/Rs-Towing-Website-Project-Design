@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { JSDOM } from 'jsdom';
 import { defaults } from '../public/assets/business-defaults.js';
-import { validateSettings, publicReview } from '../netlify/lib/validation.mjs';
+import { validateSettings, validateSubmission, publicReview } from '../netlify/lib/validation.mjs';
 import { isLocalPreview, sameOrigin } from '../netlify/lib/store.mjs';
 
 test('only consented, published review fields reach the public response', () => {
@@ -41,7 +41,7 @@ test('local owner bypass cannot activate on a production hostname and mutations 
   if (previous === undefined) delete process.env.NETLIFY_DEV; else process.env.NETLIFY_DEV = previous;
 });
 
-test('a manual roadside quote survives refresh and failed sends, then confirms success in the same popup', async () => {
+test('a manual hauling quote survives refresh and failed sends, then confirms success in the same popup', async () => {
   const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
   const catalog = JSON.parse(await readFile(new URL('../public/assets/us-places.json', import.meta.url), 'utf8'));
   let submitted;
@@ -95,7 +95,7 @@ test('a manual roadside quote survives refresh and failed sends, then confirms s
   form.elements.dropoff_undecided.dispatchEvent(new Event('change', { bubbles: true }));
   form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   assert.match(document.querySelector('.quote-progress-label').textContent, /Step 2/);
-  input('service', 'Vehicle towing or transport');
+  input('service', 'Scheduled vehicle hauling');
   input('pickup_timing', 'Specific date');
   assert.equal(form.elements.pickup_date.required, true);
   form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
@@ -179,4 +179,20 @@ test('a manual roadside quote survives refresh and failed sends, then confirms s
   form.elements.dropoff_undecided.dispatchEvent(new Event('change', { bubbles: true }));
   assert.equal(form.elements.dropoff.value, 'Newton, NC');
   dom.window.close();
+});
+
+
+test('public submissions reject impossible dates and oversized review names while preserving optional email', () => {
+  const quote = { 'form-name': 'quote-request', pickup: 'Charlotte, NC', dropoff: 'Raleigh, NC',
+    name: 'Test customer', phone: '202-555-0142', service: 'Equipment hauling', details: 'Move a tractor.',
+    pickup_timing: 'Specific date', pickup_date: '2028-02-29' };
+  assert.doesNotThrow(() => validateSubmission(quote));
+  for (const date of ['2026-02-29', '2026-02-31', '2026-13-01']) {
+    assert.throws(() => validateSubmission({ ...quote, pickup_date: date }), /pickup date/);
+  }
+  assert.doesNotThrow(() => validateSubmission({ ...quote, email: 'dispatch+test@example.com' }));
+  assert.throws(() => validateSubmission({ ...quote, email: 'invalid email' }), /email/);
+  const review = { 'form-name': 'customer-review', rating: '4', review: 'Helpful service.' };
+  assert.doesNotThrow(() => validateSubmission(review));
+  assert.throws(() => validateSubmission({ ...review, first_name: 'a'.repeat(81) }), /first name/);
 });

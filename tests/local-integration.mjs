@@ -38,12 +38,13 @@ const marker = 'LOCAL TEST ' + randomUUID().slice(0, 8);
 const quoteId = randomUUID();
 const quoteFields = {
   'form-name': 'quote-request', name: marker, phone: '202-555-0142', pickup: 'Charlotte, NC', dropoff: 'Unsure',
-  pickup_timing: 'Flexible', service: 'Vehicle towing or transport', details: 'Fictional enquiry for the local workflow test.',
+  pickup_timing: 'Flexible', service: 'Scheduled vehicle hauling', details: 'Fictional enquiry for the local workflow test.',
 };
 await submit(quoteFields, quoteId);
 await submit(quoteFields, quoteId);
 let enquiries = (await request('owner?action=list')).data.items.filter(item => item.id === quoteId);
 assert.equal(enquiries.length, 1, 'Retrying the same local request must not create another enquiry.');
+assert.match(enquiries[0].jobNumber, /^RS-\d{6}-VEH-\d{4,}$/);
 const enquirySave = await request('owner?action=enquiry', {
   id: quoteId, revision: enquiries[0].revision, status: 'Contacted', note: 'Local test note.', followUp: '',
 });

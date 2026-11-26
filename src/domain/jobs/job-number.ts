@@ -1,5 +1,6 @@
 export const serviceCodes = {
-  TOW: 'Vehicle towing and transport',
+  VEH: 'Scheduled vehicle hauling',
+  TOW: 'Vehicle transport (legacy)',
   EQP: 'Equipment hauling',
   FRT: 'Freight and cargo',
   GEN: 'General enquiries',
@@ -21,6 +22,7 @@ export function jobNumberGroup(receivedAt: string, service = '') {
   const normalized = typeof service === 'string' ? service.toLowerCase() : '';
   const code: ServiceCode = /\bequipment\b/.test(normalized) ? 'EQP'
     : /\b(freight|cargo)\b/.test(normalized) ? 'FRT'
+    : normalized === 'scheduled vehicle hauling' ? 'VEH'
     : /\b(tow(?:ing)?|vehicle|roadside)\b/.test(normalized) ? 'TOW' : 'GEN';
   return { period: year && month ? year.padStart(4, '0') + month : 'UNDATED', code };
 }
@@ -34,7 +36,7 @@ export function normalizeJobNumber(value: string) {
 }
 
 export function enquiryLinkNumber(hash: string) {
-  const number = /^#enquiries\/(RS-(?:\d{6}|UNDATED)-(?:TOW|EQP|FRT|GEN)-\d{4,})$/i.exec(hash)?.[1];
+  const number = /^#enquiries\/(RS-(?:\d{6}|UNDATED)-(?:VEH|EQP|FRT|GEN|TOW)-\d{4,})$/i.exec(hash)?.[1];
   return number?.toUpperCase();
 }
 

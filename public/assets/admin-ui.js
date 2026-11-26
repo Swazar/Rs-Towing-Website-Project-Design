@@ -63,7 +63,7 @@ export function renderSectionPreview(container, section, settings) {
   if (section === 'opening') { container.replaceChildren(miniSite(settings)); return; }
   const sample = node('div', undefined, 'section-sample');
   if (section === 'contact') {
-    sample.append(node('p', settings.businessName, 'sample-small'), node('h3', 'Let’s get you moving.'));
+    sample.append(node('p', settings.businessName, 'sample-small'), node('h3', 'Plan your haul'));
     for (const [name, value] of [['phone', settings.phone], ['mail', settings.email], ['map-pin', settings.location], ['clock', settings.hoursNote]]) {
       const row = node('div', undefined, 'sample-contact-row'); row.append(icon(name), node('span', value)); sample.append(row);
     }

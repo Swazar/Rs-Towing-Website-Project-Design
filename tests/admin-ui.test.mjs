@@ -13,7 +13,7 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
   dom.window.HTMLElement.prototype.scrollIntoView = function () {};
   dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true; };
   dom.window.HTMLDialogElement.prototype.close = function () { this.open = false; };
-  let settings = structuredClone(defaults), contentWrites = 0;
+  let settings = structuredClone(defaults), contentWrites = 0, inboxReads = 0;
   const uploadRequests = [], canvasSizes = [];
   globalThis.createImageBitmap = async () => ({ width: 3000, height: 1500, close() {} });
   dom.window.HTMLCanvasElement.prototype.getContext = function () { return { drawImage() {} }; };
@@ -33,13 +33,13 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
       return Response.json({ items: [], nextOffset: null });
     }
     const action = new URL(url, location.href).searchParams.get('action');
-    if (action === 'session') return Response.json({ localPreview: true, role: 'Owner', permissions: ['jobs', 'content', 'reviews', 'export', 'activity'], user: { email: 'Local preview' } });
+    if (action === 'session') return Response.json({ localPreview: true, role: 'Owner', permissions: ['jobs', 'content', 'reviews', 'export', 'activity'], user: { id: 'fixture-owner', email: 'Local preview' } });
     if (action === 'profile') return Response.json({ data: null, revision: null });
     if (action === 'content') {
       if (options?.method === 'POST') { settings = JSON.parse(options.body).data; contentWrites++; }
       return Response.json({ data: settings, revision: 'revision-' + contentWrites });
     }
-    if (action === 'list') return Response.json({ items: records });
+    if (action === 'list') { inboxReads++; return Response.json({ items: records }); }
     throw new Error('Unexpected request ' + url);
   };
   await import('../src/admin/index.js');
@@ -49,6 +49,23 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
   assert.equal($('#owner-workspace').hidden, false);
   assert.equal($('.editor-section[open]'), null);
   assert.equal(document.querySelectorAll('.metric-card').length, 3);
+  assert.equal($('.notification-trigger').getAttribute('aria-label'), 'Notifications, 2 unread');
+  $('.notification-trigger').click();
+  assert.equal(inboxReads, 1, 'Opening immediately reuses the loaded inbox');
+  assert.equal(document.activeElement.id, 'notification-heading');
+  assert.equal(document.querySelectorAll('.notification-item').length, 2);
+  $('.notification-item').click();
+  assert.equal(location.hash, '#enquiries');
+  assert.match($('#enquiry-detail').textContent, /New customer/);
+  assert.equal($('.notification-trigger').getAttribute('aria-label'), 'Notifications, 1 unread');
+  $('.notification-trigger').click();
+  $('.notification-read-all').click();
+  assert.equal($('.notification-badge').hidden, true);
+  assert.ok(dom.window.localStorage.getItem('rs-workspace-notifications-v1:fixture-owner'));
+  $('#notification-heading').dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  assert.equal($('#notification-panel').hidden, true);
+  assert.equal(document.activeElement, $('.notification-trigger'));
+  $('[data-owner-view="overview"]').click();
   document.documentElement.scrollTop = 500;
   document.querySelectorAll('.metric-card')[1].click();
   assert.equal(document.documentElement.scrollTop, 0, 'switching sections brings the new page heading into view');
@@ -79,10 +96,10 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
   document.querySelector('[aria-label="Change homepage photo"]').click();
   assert.equal($('#image-picker-dialog').open, true);
   $('[data-media-tab="library"]').click(); await settle();
-  document.querySelector('[data-image-src="/assets/towing-stock.webp"]').click();
+  document.querySelector('[data-image-src="/assets/flatbed-freight.webp"]').click();
   $('#image-picker-use').click(); await settle();
   assert.equal($('#image-picker-dialog').open, false);
-  assert.equal($('#section-preview .site-mini-hero > img').getAttribute('src'), '/assets/towing-stock.webp');
+  assert.equal($('#section-preview .site-mini-hero > img').getAttribute('src'), '/assets/flatbed-freight.webp');
   assert.equal(contentWrites, 0, 'Choosing an image only changes the draft.');
   $('#content-discard').click();
   assert.equal($('#section-preview .site-mini-hero > img').getAttribute('src'), defaults.heroImage.src);
@@ -131,5 +148,13 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
   assert.equal($('#review-preview-dialog').open, true);
   assert.match($('#review-preview-body').textContent, /<script>Private feedback<\/script>/);
   assert.equal($('#review-preview-body script'), null);
+  $('#review-preview-dialog').close();
+  records.push({ ...records[0], id: 'later-job', created_at: '2026-11-17T14:00:00Z', data: { ...records[0].data, name: 'Later customer' } });
+  $('.notification-trigger').click();
+  $('.notification-refresh').click();
+  await settle();
+  assert.equal(inboxReads, 2);
+  assert.equal($('.notification-trigger').getAttribute('aria-label'), 'Notifications, 1 unread');
+  assert.match($('.notification-item').textContent, /Later customer/);
   dom.window.close();
 });

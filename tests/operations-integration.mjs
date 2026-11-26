@@ -19,7 +19,7 @@ try {
 const id = randomUUID(), marker = 'LOCAL OPS TEST ' + id.slice(0, 8);
 const submit = await fetch(base + '/.netlify/functions/local-submission', {
   method: 'POST', headers: { Origin: base, 'Content-Type': 'application/x-www-form-urlencoded' },
-  body: new URLSearchParams({ request_id: id, 'form-name': 'quote-request', name: marker, phone: '+12025550142', pickup: 'Charlotte, NC', dropoff: 'Raleigh, NC', pickup_point: '35.2271,-80.8431', dropoff_point: '35.7796,-78.6382', service: 'Vehicle towing or transport', details: 'Local integration fixture.', pickup_timing: 'Specific date', pickup_date: '2026-11-18' }),
+  body: new URLSearchParams({ request_id: id, 'form-name': 'quote-request', name: marker, phone: '+12025550142', pickup: 'Charlotte, NC', dropoff: 'Raleigh, NC', pickup_point: '35.2271,-80.8431', dropoff_point: '35.7796,-78.6382', service: 'Scheduled vehicle hauling', details: 'Local integration fixture.', pickup_timing: 'Specific date', pickup_date: '2026-11-18' }),
 }); assert.equal(submit.status, 200);
 let list = (await api('list')).data, item = list.items.find(entry => entry.id === id);
 let saved = await api('enquiry', { id, revision: item.revision, status: 'Booked', note: '=1+1', followUp: '2026-11-18', scheduledDate: '2026-11-19', scheduledTime: '09:30' });

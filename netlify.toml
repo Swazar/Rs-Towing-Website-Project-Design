@@ -5,8 +5,12 @@
 [build.environment]
   NODE_VERSION = "24"
 
+[context.production.environment]
+  RS_CANONICAL_URL = "https://rsonthegollc.com"
+
 [functions]
   node_bundler = "esbuild"
+  included_files = ["!.netlify/**", "!.env", "!.env.*"]
 
 [functions."owner-media"]
   external_node_modules = ["sharp"]

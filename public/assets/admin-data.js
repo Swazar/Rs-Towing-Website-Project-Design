@@ -20,14 +20,30 @@ export function monthDays(year, month) {
   return Array.from({ length: count }, (_, index) => { const day = new Date(start); day.setDate(day.getDate() + index); return { date: dateKey(day), day: day.getDate(), inMonth: day.getMonth() === month }; });
 }
 const normalize = value => String(value).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-export function locationPoint(item, name, places) {
-  const raw = String(item.data[name + '_point'] || '');
-  if (raw) {
-    const point = raw.split(',').map(Number);
-    if (point.length === 2 && point.every(Number.isFinite) && Math.abs(point[0]) <= 90 && Math.abs(point[1]) <= 180) return { point, approximate: Boolean(places?.some(([label]) => normalize(label) === normalize(item.data[name]))) || item.data[name + '_accuracy'] === 'Street only' };
+const cityIndexes = new WeakMap();
+function cityPoint(places, label) {
+  if (!places?.length || !label) return;
+  let index = cityIndexes.get(places);
+  if (!index) {
+    index = new Map();
+    for (const [name, lat, lng] of places) {
+      const key = normalize(name);
+      if (!index.has(key)) index.set(key, [lat, lng]);
+    }
+    cityIndexes.set(places, index);
   }
-  // Manual street locations must not silently turn into a guessed street pin.
-  if (item.data[name + '_accuracy']?.startsWith('Manual')) return null;
-  const match = places?.find(([label]) => normalize(label) === normalize(item.data[name]));
-  return match ? { point: match.slice(1, 3), approximate: true } : null;
+  return index.get(normalize(label));
+}
+
+export function locationPoint(item, name, places) {
+  const accuracy = item.data[name + '_accuracy'];
+  // Manual stops need confirmation even if an old submission included coordinates.
+  if (accuracy?.startsWith('Manual')) return null;
+  const raw = String(item.data[name + '_point'] || '');
+  const city = cityPoint(places, item.data[name]);
+  if (/^-?\d{1,3}(?:\.\d+)?,\s*-?\d{1,3}(?:\.\d+)?$/.test(raw.trim())) {
+    const point = raw.split(',').map(Number);
+    if (Math.abs(point[0]) <= 90 && Math.abs(point[1]) <= 180) return { point, approximate: Boolean(city) || accuracy === 'Street only' };
+  }
+  return city ? { point: city, approximate: true } : null;
 }
