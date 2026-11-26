@@ -31,15 +31,17 @@ export class WorkspaceCustomizer {
       cards.append(label);
     });
     choices.append(cards); this.container.append(choices);
-    this.container.append(this.node('p', 'Mobile has one consistent layout. Workspace presets and panel order are available on desktop.', 'workspace-mobile-note'));
     this.buildThemes();
     const helpRow = this.node('div', '', 'workspace-help-row');
     helpRow.append(this.node('span', 'Choose the panels you need', 'workspace-control-hint'));
     const help = this.node('button', '?', 'workspace-help-trigger'); help.type = 'button'; help.setAttribute('aria-label', 'How panels and arrangement work'); help.setAttribute('aria-haspopup', 'dialog'); help.setAttribute('aria-controls', 'workspace-panel-help');
     this.buildHelp(help); helpRow.append(help); this.container.append(helpRow);
     const details = this.node('details', '', 'workspace-panel-controls');
-    const orderHelp = this.node('p', 'Check panels to show them. On desktop, choose a position: 1 is first, then 2, 3, and so on. Other panels shift automatically. Save changes to apply. Mobile keeps a fixed order.', 'workspace-control-hint'); orderHelp.id = 'workspace-order-help';
-    details.append(this.node('summary', 'Panels & arrangement'), orderHelp);
+    const orderHelp = this.node('p', 'Check panels to show them. Save changes to apply.', 'workspace-control-hint'); orderHelp.id = 'workspace-order-help';
+    orderHelp.append(this.node('span', ' Choose a position to change the order. Other panels shift automatically.', 'workspace-desktop-only'));
+    const summary = this.node('summary');
+    summary.append(this.node('span', 'Overview panels'), this.node('span', ' & arrangement', 'workspace-desktop-only'));
+    details.append(summary, orderHelp);
     this.list = this.node('div', '', 'workspace-panel-list'); details.append(this.list); this.container.append(details);
     const footer = this.node('div', '', 'workspace-customizer-footer');
     const reset = this.node('button', 'Restore workspace defaults', 'quiet-button'); reset.type = 'button'; reset.id = 'workspace-reset';
@@ -76,7 +78,7 @@ export class WorkspaceCustomizer {
       const board = this.node('div', '', 'workspace-help-board ' + state); board.setAttribute('aria-hidden', 'true');
       board.append(this.node('span', 'Requests'), this.node('span', 'Calendar'), this.node('span', 'Map')); example.append(board); demo.append(example);
     }
-    dialog.append(demo, this.node('p', 'On desktop, choose a panel’s numbered position. 1 is first. Choosing 3 moves it to third place and shifts the other panels automatically. Unchecked panels keep their place for when you show them again. Mobile always uses one fixed column and order.'), this.node('p', 'Selections take effect after Save changes. Restore workspace defaults selects the original theme, Balanced preset, and all permitted panels; save to apply them.', 'workspace-control-hint'));
+    dialog.append(demo, this.node('p', 'On desktop, choose a panel’s numbered position. 1 is first. Choosing 3 moves it to third place and shifts the other panels automatically. Unchecked panels keep their place for when you show them again. Mobile always uses one fixed column and order.', 'workspace-desktop-only'), this.node('p', 'Selections take effect after Save changes. Restore workspace defaults selects the original theme, Balanced preset, and all permitted panels; save to apply them.', 'workspace-control-hint'));
     this.document.body.append(dialog);
     trigger.addEventListener('click', () => dialog.showModal()); close.addEventListener('click', () => dialog.close());
     dialog.addEventListener('close', () => trigger.focus());
@@ -102,7 +104,7 @@ export class WorkspaceCustomizer {
         this.value.hiddenPanels = input.checked ? this.value.hiddenPanels.filter(item => item !== id) : [...this.value.hiddenPanels, id];
         this.changed(panel.title + (input.checked ? ' shown.' : ' hidden.'));
       });
-      const actions = this.node('div', '', 'workspace-order-actions'), positionLabel = this.node('label', '', 'workspace-position');
+      const actions = this.node('div', '', 'workspace-order-actions workspace-desktop-only'), positionLabel = this.node('label', '', 'workspace-position');
       const position = this.node('select'); position.dataset.position = id; position.setAttribute('aria-label', 'Position of ' + panel.title); position.setAttribute('aria-describedby', 'workspace-order-help');
       ordered.forEach((panelId, rank) => { const option = this.node('option', String(rank + 1) + (rank === 0 ? ' · First' : rank === ordered.length - 1 ? ' · Last' : '')); option.value = String(rank); position.append(option); });
       position.value = String(index);

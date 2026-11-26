@@ -16,7 +16,8 @@ interface EnquiriesOptions {
   onHistory: (item: Enquiry) => Promise<void>;
   onSave: (item: Enquiry, fields: EnquiryDraft, revision: Draft['revision']) => Promise<SavedEnquiry>;
   onSaved: (saved: SavedEnquiry) => void;
-  onSelect: (item: Enquiry) => void;
+  onSelect: (item: Enquiry, compact: boolean) => void;
+  onBack: () => void;
   onError: (error: unknown) => void;
 }
 
@@ -28,13 +29,17 @@ export class Enquiries {
   private drafts = new Map<string, Draft>();
   private page = 1;
   private detail?: ReturnType<typeof createEnquiryDetail>;
+  private returnScrollTop?: number;
+  private workspace = document.querySelector<HTMLElement>('#enquiry-workspace')!;
+  private compact = document.defaultView?.matchMedia?.('(max-width: 1000px)');
+  private scroller = document.scrollingElement || document.documentElement;
   private search = document.querySelector<HTMLInputElement>('#enquiry-search')!;
   private status = document.querySelector<HTMLSelectElement>('#enquiry-filter')!;
   private from = document.querySelector<HTMLInputElement>('#enquiry-from')!;
   private to = document.querySelector<HTMLInputElement>('#enquiry-to')!;
   private sort = document.querySelector<HTMLSelectElement>('#enquiry-sort')!;
   private exportLink = document.querySelector<HTMLAnchorElement>('#enquiry-export')!;
-  private sidebarCount = document.querySelector('#enquiry-count')!;
+  private sidebarCount = document.querySelector<HTMLElement>('#enquiry-count')!;
   private list = document.querySelector('#enquiry-list')!;
   private total = document.querySelector('#enquiry-result-count')!;
   private pagination = document.querySelector<HTMLElement>('#enquiry-pagination')!;
@@ -53,6 +58,10 @@ export class Enquiries {
     }
     this.previous.addEventListener('click', () => this.changePage(-1));
     this.next.addEventListener('click', () => this.changePage(1));
+    this.workspace.querySelector('#enquiry-list-back')!.addEventListener('click', options.onBack);
+    this.compact?.addEventListener?.('change', () => {
+      this.list.querySelectorAll<HTMLButtonElement>('[data-enquiry-id]').forEach(row => this.applyRowSelection(row));
+    });
   }
 
   get dirty() { return this.drafts.size > 0; }
@@ -69,23 +78,57 @@ export class Enquiries {
   }
 
   setFilter(status: string) {
+    this.showInbox();
     this.status.value = status;
     this.search.value = '';
     this.page = 1;
     this.render();
   }
 
-  open(item: Enquiry) {
-    this.status.value = this.search.value = this.from.value = this.to.value = '';
+  showInbox(restorePosition = false) {
+    const wasOpen = this.workspace.dataset.enquiryPane === 'detail';
+    this.workspace.dataset.enquiryPane = 'list';
+    if (!restorePosition || !wasOpen || !this.compact?.matches) return;
+    const row = this.selectedRow();
+    if (row && this.returnScrollTop !== undefined) {
+      this.scroller.scrollTop = this.returnScrollTop;
+      row.focus({ preventScroll: true });
+    } else (row ?? this.search).focus();
+  }
+
+  focusDetail() {
+    if (!this.compact?.matches || this.workspace.dataset.enquiryPane !== 'detail') return;
+    const heading = this.record.querySelector<HTMLElement>('.record-heading h3');
+    if (!heading) return;
+    heading.tabIndex = -1;
+    this.scroller.scrollTop = 0;
+    heading.focus({ preventScroll: true });
+  }
+
+  open(item: Enquiry, preserveInbox = false) {
+    const keepFilters = preserveInbox && filterEnquiries([item], this.filters()).length > 0;
+    this.returnScrollTop = keepFilters ? this.scroller.scrollTop : undefined;
+    if (!keepFilters) this.status.value = this.search.value = this.from.value = this.to.value = '';
+    this.workspace.dataset.enquiryPane = 'detail';
     this.selectedId = item.id;
     this.render(true);
   }
 
-  openNumber(number: string) {
+  openNumber(number: string, preserveInbox = false) {
     const item = this.items.find(entry => entry.jobNumber === number || entry.id === number ||
       entry.jobNumberAliases?.includes(number) || entry.duplicateIds?.includes(number));
-    if (item) this.open(item);
+    if (item) this.open(item, preserveInbox);
     return Boolean(item);
+  }
+
+  private selectedRow() {
+    return [...this.list.querySelectorAll<HTMLButtonElement>('[data-enquiry-id]')]
+      .find(row => row.dataset.enquiryId === this.selectedId);
+  }
+
+  private applyRowSelection(row: HTMLButtonElement) {
+    if (this.compact?.matches) row.removeAttribute('aria-pressed');
+    else row.setAttribute('aria-pressed', String(this.selectedId === row.dataset.enquiryId));
   }
 
   applySaved(item: Enquiry, saved: SavedEnquiry) {
@@ -104,11 +147,17 @@ export class Enquiries {
     this.page += direction;
     this.render();
     const control = direction < 0 ? this.previous : this.next;
-    if (control.disabled) this.list.querySelector<HTMLButtonElement>('button')?.focus();
+    if (this.compact?.matches) {
+      const row = this.list.querySelector<HTMLButtonElement>('button');
+      row?.scrollIntoView?.({ block: 'start', behavior: 'instant' });
+      row?.focus({ preventScroll: true });
+    } else if (control.disabled) this.list.querySelector<HTMLButtonElement>('button')?.focus();
   }
 
   render(followSelection = false) {
-    this.sidebarCount.textContent = String(this.items.filter(item => !item.state || item.state.status === 'New').length);
+    const newCount = this.items.filter(item => !item.state || item.state.status === 'New').length;
+    this.sidebarCount.textContent = String(newCount);
+    this.sidebarCount.hidden = newCount === 0;
     const filters = this.filters();
     const filtered = filterEnquiries(this.items, filters);
     this.exportLink.href = '/.netlify/functions/owner?' + new URLSearchParams({ action: 'export', ...filters });
@@ -118,7 +167,10 @@ export class Enquiries {
     this.page = Math.max(1, Math.min(this.page, pageCount));
     const offset = (this.page - 1) * pageSize;
     const visible = filtered.slice(offset, offset + pageSize);
-    if (!visible.some(item => item.id === this.selectedId)) this.selectedId = visible[0]?.id;
+    const inCompactDetail = this.compact?.matches && this.workspace.dataset.enquiryPane === 'detail';
+    const openItem = inCompactDetail ? this.items.find(item => item.id === this.selectedId) : undefined;
+    if (inCompactDetail && !openItem) this.showInbox();
+    if (!openItem && !visible.some(item => item.id === this.selectedId)) this.selectedId = visible[0]?.id;
     this.total.textContent = String(filtered.length);
     this.pagination.hidden = pageCount <= 1;
     this.previous.disabled = this.page === 1;
@@ -131,7 +183,7 @@ export class Enquiries {
       ? 'Try another search or clear the filters.' : 'New requests will appear here.'));
 
     this.detail?.dispose();
-    const item = visible.find(entry => entry.id === this.selectedId);
+    const item = openItem ?? visible.find(entry => entry.id === this.selectedId);
     if (item) this.renderDetail(item);
     else {
       this.detail = undefined;
@@ -144,7 +196,7 @@ export class Enquiries {
     const button = node('button', undefined, 'enquiry-row');
     button.type = 'button';
     button.dataset.enquiryId = item.id;
-    button.setAttribute('aria-pressed', String(this.selectedId === item.id));
+    this.applyRowSelection(button);
     const heading = node('span', undefined, 'enquiry-row-head');
     heading.append(node('strong', data.name || 'Customer'), node('time', this.options.shortDate(item.created_at)));
     const route = node('span', undefined, 'mini-route');
@@ -155,13 +207,14 @@ export class Enquiries {
     if (item.jobNumber) button.append(node('span', item.jobNumber, 'enquiry-row-number'));
     button.append(node('span', data.service, 'service-label'), route, footer);
     button.addEventListener('click', () => {
+      const compact = Boolean(this.compact?.matches);
+      this.returnScrollTop = compact ? this.scroller.scrollTop : undefined;
+      this.workspace.dataset.enquiryPane = 'detail';
       this.selectedId = item.id;
       this.render();
-      this.options.onSelect(item);
-      if (document.defaultView?.matchMedia?.('(max-width: 1000px)').matches) {
-        this.record.scrollIntoView({ block: 'start', behavior: 'instant' });
-      }
-      [...this.list.querySelectorAll<HTMLButtonElement>('[data-enquiry-id]')].find(row => row.dataset.enquiryId === item.id)?.focus({ preventScroll: true });
+      this.options.onSelect(item, compact);
+      if (compact) this.focusDetail();
+      else this.selectedRow()?.focus({ preventScroll: true });
     });
     return button;
   }

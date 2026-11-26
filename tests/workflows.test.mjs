@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { JSDOM } from 'jsdom';
+import { changeReviewPublication, publicHomepageReviews, reviewHomepage } from '../netlify/lib/review-publication.mjs';
+import { renderPublishedReviews } from '../public/assets/public-reviews.js';
 import { defaults } from '../public/assets/business-defaults.js';
 import { validateSettings, validateSubmission, publicReview } from '../netlify/lib/validation.mjs';
 import { isLocalPreview, sameOrigin } from '../netlify/lib/store.mjs';
@@ -16,6 +18,48 @@ test('only consented, published review fields reach the public response', () => 
   });
   submission.data['publish-permission'] = '';
   assert.equal(publicReview(submission, { publication: 'Published' }), null);
+});
+
+test('homepage selection caps legacy reviews and requires an open slot before publishing', () => {
+  const items = [1, 2, 3, 4].map(number => ({
+    id: 'original-' + number, form_name: 'customer-review', created_at: '2026-11-17T12:00:00Z',
+    data: { first_name: 'Jamie ' + number, email: 'private@example.com', review: 'On time', rating: '5', 'publish-permission': 'yes' },
+  }));
+  const decisions = Object.fromEntries(items.map(item => [item.id, { publication: 'Published' }]));
+  const legacy = { reviews: items.map(item => publicReview(item, decisions[item.id])), decisions };
+  const edit = (snapshot, action, records = items) => changeReviewPublication(snapshot, records, action, 'owner').snapshot;
+  assert.equal(publicHomepageReviews(null), null);
+  assert.deepEqual(reviewHomepage(legacy, items, 'revision').map(review => review.id), ['original-1', 'original-2', 'original-3']);
+  assert.equal(publicHomepageReviews(legacy).length, 3);
+  assert.throws(() => edit(legacy, { id: 'original-4', publication: 'Published' }), { status: 409 });
+  const withSpace = edit(legacy, { id: 'original-2', publication: 'Unpublished' });
+  assert.deepEqual(withSpace.reviewIds, ['original-1', 'original-3'], 'a removed slot stays empty');
+  assert.equal(withSpace.decisions['original-4'].publication, 'Published', 'legacy history remains available');
+  const replaced = edit(withSpace, { id: 'original-4', publication: 'Published' });
+  assert.deepEqual(replaced.reviewIds, ['original-1', 'original-3', 'original-4']);
+  assert.ok(replaced.reviews.every(review => !Object.hasOwn(review, 'id') && !Object.hasOwn(review, 'email')));
+  assert.equal(reviewHomepage(replaced, [], 'revision')[0].revision, 'revision');
+  const orphanRemoved = edit(legacy, { slot: 1, publication: 'Unpublished' }, []);
+  assert.deepEqual(orphanRemoved.reviews.map(review => review.name), ['Jamie 1', 'Jamie 3']);
+  assert.throws(() => edit(legacy, { slot: 3, publication: 'Unpublished' }, []), { status: 400 });
+});
+
+test('public visitors see up to three reviews in the selected order', async () => {
+  const html = await readFile(new URL('../public/index.html', import.meta.url), 'utf8');
+  const dom = new JSDOM(html, { pretendToBeVisual: true });
+  const previousDocument = globalThis.document;
+  globalThis.document = dom.window.document;
+  try {
+    const list = document.querySelector('[data-review-list]');
+    const template = document.querySelector('#review-card');
+    const entries = [17, 19, 18, 20].map(day => ({ name: 'Customer ' + day, quote: 'Public feedback', rating: 5, date: '2026-11-' + day }));
+    renderPublishedReviews(entries, { list, template });
+    assert.deepEqual([...list.querySelectorAll('.review-author')].map(author => author.textContent), ['Customer 17', 'Customer 19', 'Customer 18']);
+    assert.equal(document.querySelector('[data-show-reviews]'), null);
+  } finally {
+    globalThis.document = previousDocument;
+    dom.window.close();
+  }
 });
 
 test('website edits reject unsafe contact URLs, arbitrary photos, and notices without expiry', () => {

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { JSDOM } from 'jsdom';
 import { adaptServiceList } from '../public/assets/service-list.js';
-import { LiquidNavigation } from '../public/assets/admin-navigation.js';
+import { LiquidNavigation, setupMobileWorkspace } from '../public/assets/admin-navigation.js';
 
 test('glass navigation retargets interrupted motion and snaps on reduced motion or resize', () => {
   const dom = new JSDOM('<nav><button aria-current="page">Overview</button><button>Enquiries</button><button>Website</button></nav>');
@@ -42,9 +42,54 @@ test('glass navigation retargets interrupted motion and snaps on reduced motion 
   menu.scrollLeft = 70;
   navigation.select(buttons[2], false);
   assert.equal(navigation.glass.style.transform, 'translate3d(140px, 0px, 0px)', 'scrolling the mobile row preserves the highlight in content coordinates');
+  buttons[2].getBoundingClientRect = () => ({ left: 0, top: 0, width: 0, height: 0 });
+  navigation.select(buttons[2]);
+  assert.equal(navigation.glass.hidden, true, 'destinations outside the phone dock clear its highlight');
+  assert.equal(menu.classList.contains('liquid-nav-ready'), false);
+  navigation.select(buttons[0]);
+  assert.equal(navigation.glass.hidden, false, 'returning to a visible destination draws the highlight again');
   assert.equal(buttons[0].getAttribute('aria-current'), 'page', 'decoration never changes the accessible navigation state');
   navigation.destroy();
   assert.equal(menu.querySelector('.nav-liquid-glass'), null);
+  dom.window.close();
+});
+
+test('the phone header moves the assistant and the dock yields only to an on-screen keyboard', () => {
+  const dom = new JSDOM('<header><div id="notifications"></div></header><nav></nav><main><button>Assistant</button><textarea></textarea></main>');
+  const { window } = dom;
+  const { document } = window;
+  const assistant = document.querySelector('button');
+  const notifications = document.querySelector('#notifications');
+  const dock = document.querySelector('nav');
+  dock.getBoundingClientRect = () => ({ height: 70 });
+  const viewport = new window.EventTarget();
+  Object.assign(viewport, { height: window.innerHeight, scale: 1 });
+  Object.defineProperty(window, 'visualViewport', { value: viewport });
+  let phone = false, resizeLayout;
+  window.matchMedia = () => ({ get matches() { return phone; }, addEventListener(_, callback) { resizeLayout = callback; } });
+
+  setupMobileWorkspace(assistant, notifications, dock);
+  assert.equal(assistant.parentElement.tagName, 'MAIN');
+  assistant.focus();
+  phone = true;
+  resizeLayout();
+  assert.equal(assistant.nextElementSibling, notifications);
+  assert.equal(document.documentElement.style.getPropertyValue('--owner-mobile-dock-measured'), '70px');
+  assert.equal(document.activeElement, assistant);
+
+  document.querySelector('textarea').focus();
+  assert.equal(document.documentElement.hasAttribute('data-owner-keyboard'), false);
+  viewport.height -= 250;
+  viewport.dispatchEvent(new window.Event('resize'));
+  assert.equal(document.documentElement.hasAttribute('data-owner-keyboard'), true);
+  viewport.scale = 2;
+  viewport.dispatchEvent(new window.Event('resize'));
+  assert.equal(document.documentElement.hasAttribute('data-owner-keyboard'), false);
+
+  phone = false;
+  resizeLayout();
+  assert.equal(assistant.parentElement.tagName, 'MAIN');
+  assert.equal(document.documentElement.style.getPropertyValue('--owner-mobile-dock-measured'), '');
   dom.window.close();
 });
 

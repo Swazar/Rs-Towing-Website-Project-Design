@@ -33,7 +33,7 @@ The authenticated workspace uses a floating, translucent sidebar with the brand,
 
 1. Open **Admin → Enquiries** or select a new enquiry from the notification bell. Use the job number when discussing a request with another dispatcher.
 2. Check **Route & load**, then use **Customer** to call or email. Once the customer agrees, record the price, status, and confirmed pickup time in **Notes & status**. Check **Overview → Calendar** for the scheduled job.
-3. In **Reviews**, preview feedback and publish it only when the customer has allowed sharing. In **Website**, use the full preview to check business information or photos before publishing changes.
+3. In **Reviews**, read feedback directly and select **Show on homepage** for reviews the customer has allowed you to publish. In **Website**, use the full preview to check business information or photos before publishing changes.
 4. To check what customers see on a phone, open the homepage, expand a service, and select its quote link. Use the local preview for practice submissions.
 
 ## Day-to-day admin tools
@@ -127,7 +127,7 @@ Choose a saved copy to download its encrypted archive or restore missing submiss
 
 Netlify handles website submissions and can send notifications to the inbox you choose. If the public contact address changes, update the default address in `public/assets/business-defaults.js` and the contact links in `public/index.html` and `public/privacy/index.html`.
 
-Incoming reviews live in Netlify Forms. The owner’s Reviews screen publishes or unpublishes consenting feedback without a code deploy. The public endpoint returns only public names, original text, ratings, and dates. It keeps publication decisions and the public review list in a single revision-controlled record. The homepage shows up to three recent approved reviews and a compact invitation when there are none. The existing `public/assets/reviews.json` is a fallback until the first admin publication record exists. If the old website received reviews or quotes, export them from the previous provider before retiring it.
+Incoming reviews live in Netlify Forms. The owner’s Reviews screen publishes or unpublishes consenting feedback without a code deploy. The public endpoint returns only public names, original text, ratings, and dates. It keeps publication decisions and the public review list in a single revision-controlled record. The homepage has three review slots, managed at the top of Admin **Reviews**. New selections are added in slot order. Older lists keep the first three visible and leave the rest available in Admin. The existing `public/assets/reviews.json` is a fallback until the first admin publication record exists. If the old website received reviews or quotes, export them from the previous provider before retiring it.
 
 Change the review field’s `maxlength` in `public/reviews/index.html` to adjust the form’s 800-character limit. Update the fallback hint beside it to match. The counter reads the field limit automatically. Homepage review cards use `reviewPreviewLength` in `public/assets/site.js` for their collapsed preview, and the feedback box uses `max-height` in `public/assets/site.css`.
 

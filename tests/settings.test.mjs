@@ -6,6 +6,7 @@ import { validateProfile } from '../netlify/lib/profile.mjs';
 import { preferences, formatClock, formatTimestamp, formatBusinessTime } from '../public/assets/admin-preferences.js';
 import { businessDateKey, filterEnquiries } from '../public/assets/admin-data.js';
 import { AccountSettings } from '../public/assets/admin-settings.js';
+import { prepareAvatar } from '../public/assets/admin-operations.js';
 import { workspaceDefaults } from '../public/assets/workspace-config.js';
 
 test('personal settings validate timezones and keep identity and permissions server controlled', () => {
@@ -50,6 +51,8 @@ test('settings apply workspace changes only after saving and preserve drafts on 
   const $ = selector => document.querySelector(selector);
   editor.load(stored, session);
   assert.equal(applied.length, 1);
+  assert.match($('#settings-clock-value').textContent, /^\d\d:\d\d:\d\d$/);
+  assert.match($('#settings-clock-period').textContent, /^[AP]M$/);
   $('[name="workspace-theme"][value="ocean"]').click();
   $('[name="workspacePreset"][value="spacious"]').click();
   $('[data-panel="map"]').click();
@@ -65,6 +68,7 @@ test('settings apply workspace changes only after saving and preserve drafts on 
   $('#profile-timezone').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
   assert.equal(editor.dirty, true);
   assert.match($('#settings-clock-zone').textContent, /Pacific/);
+  assert.equal($('#settings-clock-period').hidden, true);
   await editor.save();
   assert.equal(applied.length, 1, 'a failed save does not apply the draft');
   assert.match($('#profile-status').textContent, /retry/);
@@ -91,4 +95,24 @@ test('settings apply workspace changes only after saving and preserve drafts on 
   editor.load(structuredClone(stored), session);
   assert.equal($('#profile-phone').value, '+1 202 555 0101', 'saved fields reload from the account record');
   dom.window.close();
+});
+
+test('profile photo preparation fits wide and tall photos without discarding their edges', async () => {
+  const previousDocument = globalThis.document;
+  const previousBitmap = globalThis.createImageBitmap;
+  const draws = [];
+  const canvas = { getContext: () => ({ fillRect() {}, drawImage: (...args) => draws.push(args.slice(1)) }), toDataURL: () => 'data:image/jpeg;base64,AA==' };
+  globalThis.document = { createElement: () => canvas };
+  try {
+    for (const [width, height] of [[512, 256], [256, 512]]) {
+      let closed = false;
+      globalThis.createImageBitmap = async () => ({ width, height, close() { closed = true; } });
+      await prepareAvatar({ type: 'image/jpeg', size: 5000 });
+      assert.equal(closed, true);
+    }
+    assert.deepEqual(draws, [[0, 64, 256, 128], [64, 0, 128, 256]]);
+  } finally {
+    globalThis.document = previousDocument;
+    globalThis.createImageBitmap = previousBitmap;
+  }
 });

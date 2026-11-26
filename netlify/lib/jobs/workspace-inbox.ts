@@ -1,6 +1,7 @@
 import { listSubmissions } from '../submissions.mjs';
 import { mapInBatches, readRecord } from '../store.mjs';
 import { activeData } from '../recovery.mjs';
+import { reviewHomepage } from '../review-publication.mjs';
 import { isQuote, quoteRequestId, type Submission } from '../../../src/domain/jobs/types.ts';
 import { assignJobNumbers, issuedJobNumbers } from './number-store.ts';
 
@@ -57,5 +58,6 @@ export async function loadWorkspaceInbox(request: Request, includeReviews: boole
     return { ...item, jobNumber: numbers.get(item.id), state: activeData(record.data), revision: record.revision,
       ...(duplicateIds?.length ? { duplicateIds, jobNumberAliases: duplicateIds.map(id => aliases.get(id)).filter((number): number is string => Boolean(number)) } : {}) };
   });
-  return { items, reviewActivity: publication?.data?.history ?? [] };
+  const homepageReviews = reviewHomepage(publication?.data, items, publication?.revision);
+  return { items, reviewActivity: publication?.data?.history ?? [], homepageReviews };
 }

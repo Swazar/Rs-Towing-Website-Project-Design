@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { JSDOM } from 'jsdom';
+import { changeReviewPublication, reviewHomepage } from '../netlify/lib/review-publication.mjs';
 import { defaults } from '../public/assets/business-defaults.js';
 
 test('admin sections hide fields, preview drafts, reveal invalid fields, and preserve enquiry notes', async () => {
@@ -18,6 +19,7 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
   globalThis.createImageBitmap = async () => ({ width: 3000, height: 1500, close() {} });
   dom.window.HTMLCanvasElement.prototype.getContext = function () { return { drawImage() {} }; };
   dom.window.HTMLCanvasElement.prototype.toDataURL = function () { canvasSizes.push([this.width, this.height]); return 'data:image/webp;base64,UklGRg=='; };
+  let reviewPublication = null;
   const records = [
     { id: 'new-job', form_name: 'quote-request', created_at: '2026-11-17T13:00:00Z', data: { name: 'New customer', pickup: 'Charlotte, NC', dropoff: 'Newton, NC', service: 'Equipment hauling', pickup_timing: 'Flexible', details: 'Test load' } },
     { id: 'active-job', jobNumber: 'RS-202611-TOW-0001', form_name: 'quote-request', created_at: '2026-11-17T12:00:00Z', state: { status: 'Contacted', note: 'Saved note' }, data: { name: 'Active customer', pickup: 'Charlotte, NC', dropoff: 'Unsure', service: 'Vehicle towing or transport', pickup_timing: 'Today' } },
@@ -39,13 +41,16 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
       if (options?.method === 'POST') { settings = JSON.parse(options.body).data; contentWrites++; }
       return Response.json({ data: settings, revision: 'revision-' + contentWrites });
     }
-    if (action === 'list') { inboxReads++; return Response.json({ items: records }); }
+    if (action === 'list') {
+      inboxReads++;
+      return Response.json({ items: records, homepageReviews: reviewHomepage(reviewPublication, records) });
+    }
     if (action === 'review' && options?.method === 'POST') {
-      const { id, publication } = JSON.parse(options.body);
-      const review = records.find(record => record.id === id);
-      assert.equal(review.form_name, 'customer-review');
-      review.state = { publication };
-      return Response.json({ revision: publication });
+      const action = JSON.parse(options.body);
+      reviewPublication = changeReviewPublication(reviewPublication, records, action, 'fixture-owner').snapshot;
+      const review = records.find(record => record.id === action.id);
+      review.state = reviewPublication.decisions[action.id];
+      return Response.json({ revision: action.publication });
     }
     throw new Error('Unexpected request ' + url);
   };
@@ -149,14 +154,29 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
   assert.equal(settings.headline, 'Draft only headline');
   assert.equal($('#content-publish').disabled, true);
   $('[data-owner-view="reviews"]').click();
-  const reviewActions = () => [...document.querySelectorAll('.review-actions-menu button')].map(button => button.textContent);
-  assert.deepEqual(reviewActions(), ['Mark as spam']);
-  assert.match($('.review-card-state').textContent, /Customer did not grant permission to publish/);
-  $('.review-card-footer .quiet-button').click();
-  assert.equal($('#review-preview-dialog').open, true);
-  assert.match($('#review-preview-body').textContent, /<script>Private feedback<\/script>/);
-  assert.equal($('#review-preview-body script'), null);
-  $('#review-preview-dialog').close();
+  const category = key => $('[data-review-category="' + key + '"]');
+  const mainReviewAction = () => $('.review-row-actions > button');
+  assert.equal(category('ready').getAttribute('aria-pressed'), 'true');
+  assert.equal($('#review-average-score').textContent, '4.0');
+  assert.match($('#review-average-count').textContent, /^1 rating /);
+  assert.equal(document.querySelectorAll('#review-trend-months li').length, 6);
+  assert.match($('#review-trend-months li:last-child .sr-only').textContent, /, \d+ reviews?$/);
+  assert.match($('#owner-review-list').textContent, /No reviews are ready/);
+  category('private').click();
+  assert.equal(category('private').getAttribute('aria-pressed'), 'true');
+  assert.equal(mainReviewAction(), null);
+  assert.match($('#review-list-note').textContent, /did not agree to have their feedback published/);
+  assert.match($('.review-row blockquote').textContent, /<script>Private feedback<\/script>/);
+  assert.equal($('.review-row script'), null);
+  assert.equal($('.review-rating').getAttribute('aria-label'), '4 out of 5 stars');
+  assert.equal(document.querySelectorAll('.review-rating .is-filled').length, 4);
+  assert.equal(document.querySelectorAll('.review-rating svg').length, 5);
+  assert.equal($('.review-more').open, false);
+  assert.equal($('.review-more-menu button').textContent, 'Mark as spam');
+  assert.equal($('#review-preview-dialog'), null);
+  assert.equal(category('homepage'), null);
+  assert.equal(document.querySelectorAll('.review-slot-add').length, 3);
+  assert.match($('#review-slots-status').textContent, /^0 of 3 slots filled/);
   records.push({ ...records[0], id: 'later-job', created_at: '2026-11-17T14:00:00Z', data: { ...records[0].data, name: 'Later customer' } });
   $('.notification-trigger').click();
   $('.notification-refresh').click();
@@ -169,19 +189,51 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
   review.state = { publication: 'Unpublished' };
   $('#owner-reviews .owner-refresh').click();
   await settle();
-  assert.deepEqual(reviewActions(), ['Publish', 'Mark as spam']);
-  const firstReviewAction = () => $('.review-actions-menu button');
-  firstReviewAction().click();
+  $('.review-slot-add').click();
+  assert.equal(document.activeElement, mainReviewAction());
+  assert.equal(mainReviewAction().textContent, 'Add to homepage');
+  mainReviewAction().click();
   await settle();
-  assert.deepEqual(reviewActions(), ['Unpublish', 'Mark as spam']);
-  firstReviewAction().click();
+  assert.match($('#owner-review-list').textContent, /No reviews are ready/);
+  assert.equal(document.activeElement, $('.review-slot h3'));
+  assert.match($('.review-slot h3').textContent, /Jamie/);
+  assert.equal(document.querySelectorAll('.review-slot-add').length, 2);
+  $('.review-slot-remove').click();
   await settle();
-  assert.deepEqual(reviewActions(), ['Publish', 'Mark as spam']);
-  document.querySelectorAll('.review-actions-menu button')[1].click();
+  assert.equal(document.querySelectorAll('.review-slot-add').length, 3);
+  assert.equal(document.activeElement, $('.review-slot-add'));
+  assert.equal(mainReviewAction().textContent, 'Add to homepage');
+  $('.review-more summary').click();
+  assert.equal($('.review-more').open, true);
+  $('.review-more-menu button').click();
   await settle();
-  assert.deepEqual(reviewActions(), ['Restore review']);
-  firstReviewAction().click();
+  assert.match($('#owner-review-list').textContent, /No reviews are ready/);
+  category('spam').click();
+  assert.equal($('#review-average-scale').hidden, true);
+  assert.equal($('#review-average-count').textContent, 'No ratings yet');
+  assert.equal(mainReviewAction().textContent, 'Restore review');
+  mainReviewAction().click();
   await settle();
-  assert.deepEqual(reviewActions(), ['Publish', 'Mark as spam']);
+  assert.match($('#owner-review-list').textContent, /No reviews marked as spam/);
+  assert.equal($('#review-average-score').textContent, '4.0');
+
+  const currentMonth = new Date().toISOString();
+  review.created_at = currentMonth;
+  records.push({
+    ...review,
+    id: 'another-rating',
+    created_at: currentMonth,
+    state: { publication: 'Unpublished' },
+    data: { ...review.data, rating: '5', 'publish-permission': '' },
+  });
+  $('#owner-reviews .owner-refresh').click();
+  await settle();
+  assert.equal($('#review-average-score').textContent, '4.5');
+  assert.equal($('#review-trend-months li:last-child .review-trend-value').textContent, '2');
+  category('ready').click();
+  assert.equal(mainReviewAction().textContent, 'Add to homepage');
+  $('#review-search').value = 'a different customer';
+  $('#review-search').dispatchEvent(new Event('input'));
+  assert.match($('#owner-review-list').textContent, /No reviews match your search/);
   dom.window.close();
 });

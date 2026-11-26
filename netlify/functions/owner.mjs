@@ -8,7 +8,7 @@ import { defaults } from '../../public/assets/business-defaults.js';
 import { publishedWebsiteContent, upgradeHaulingContent } from '../lib/website-content.mjs';
 import { isLocalPreview, json, sameOrigin, readRecord, writeRecord } from '../lib/store.mjs';
 import { listSubmissions } from '../lib/submissions.mjs';
-import { publicReview, text, validateSettings } from '../lib/validation.mjs';
+import { text, validateSettings } from '../lib/validation.mjs';
 import { permissionsFor, canUseAction, addHistory } from '../lib/owner-access.mjs';
 import { validDate } from '../../src/domain/jobs/dates.ts';
 import { filterEnquiries, enquiryCSV } from '../../src/domain/jobs/queries.ts';
@@ -19,6 +19,7 @@ import { isQuote } from '../../src/domain/jobs/types.ts';
 import { assistantKey } from '../lib/assistant-ai.mjs';
 import { quoteAlertSummary } from '../lib/notification-mail.mjs';
 import { submissionBackups } from '../lib/submission-backups.mjs';
+import { changeReviewPublication } from '../lib/review-publication.mjs';
 
 export const config = { rateLimit: { action: 'rate_limit', windowLimit: 60, windowSize: 60, aggregateBy: ['ip'] } };
 
@@ -106,7 +107,7 @@ export default async function owner(request) {
       return json(saved);
     }
     if (['list', 'export'].includes(action) && request.method === 'GET') {
-      const { items, reviewActivity } = await loadWorkspaceInbox(request, action !== 'export' && permissions.includes('reviews'));
+      const { items, reviewActivity, homepageReviews } = await loadWorkspaceInbox(request, action !== 'export' && permissions.includes('reviews'));
       if (action === 'export') {
         const query = Object.fromEntries(new URL(request.url).searchParams);
         return new Response(enquiryCSV(filterEnquiries(items, query)), { headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="rs-enquiries.csv"', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } });
@@ -121,7 +122,7 @@ export default async function owner(request) {
         activity = [...(settings.data?.history || []), ...reviewActivity, ...(reminders.data?.history || []), ...items.flatMap(item => item.state?.history || [])]
           .sort((a, b) => b.at.localeCompare(a.at)).slice(0, 50);
       } else items.forEach(item => { if (item.state) { const { history, ...state } = item.state; item.state = state; } });
-      return json({ items: items.sort((a, b) => b.created_at.localeCompare(a.created_at)), reminders: { data: reminders.data?.items || [], revision: reminders.revision }, activity, quoteAlerts });
+      return json({ items: items.sort((a, b) => b.created_at.localeCompare(a.created_at)), reminders: { data: reminders.data?.items || [], revision: reminders.revision }, activity, quoteAlerts, homepageReviews });
     }
     if (action === 'reminder' && request.method === 'POST') {
       const current = await readRecord('reminders');
@@ -148,20 +149,13 @@ export default async function owner(request) {
       return json(saved);
     }
     if (action === 'review' && request.method === 'POST') {
-      if (!['Published', 'Unpublished', 'Spam'].includes(body.publication) || !/^[\w-]{1,100}$/.test(body.id || '')) return json({ error: 'Choose a review action.' }, 400);
-      const all = await listSubmissions(request);
-      const item = all.find(entry => entry.id === body.id && (entry.form_name || entry.data['form-name']) === 'customer-review');
-      if (!item) return json({ error: 'Review not found.' }, 404);
-      if (body.publication === 'Published' && item.data['publish-permission'] !== 'yes') return json({ error: 'This customer did not give permission to publish.' }, 400);
-      const current = await readRecord('review-publication');
-      if ((body.revision ?? null) !== current.revision) return json({ error: 'The reviews changed. Reload before saving.' }, 409);
-      const decisions = { ...current.data?.decisions, [body.id]: {
-        publication: body.publication, updatedBy: actor.email, updatedAt: new Date().toISOString(),
-      } };
-      const reviews = all.filter(entry => (entry.form_name || entry.data['form-name']) === 'customer-review')
-        .map(entry => publicReview(entry, decisions[entry.id])).filter(Boolean)
-        .sort((a, b) => b.date.localeCompare(a.date));
-      const saved = await writeRecord('review-publication', { decisions, reviews, history: addHistory(current.data, actor, body.publication + ' review', item.data.first_name || 'Customer') }, current.revision);
+      const [all, current] = await Promise.all([listSubmissions(request), readRecord('review-publication')]);
+      if ((body.revision ?? null) !== current.revision) return json({ error: 'The reviews changed. Try again with the latest list.' }, 409);
+      const { snapshot, name } = changeReviewPublication(current.data, all, body, actor.email);
+      const saved = await writeRecord('review-publication', {
+        ...snapshot,
+        history: addHistory(current.data, actor, body.publication + ' review', name),
+      }, current.revision);
       return json({ revision: saved.revision });
     }
     return json({ error: 'Not found.' }, 404);

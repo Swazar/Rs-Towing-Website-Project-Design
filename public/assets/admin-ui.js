@@ -33,15 +33,6 @@ export function picture(src, alt, className) {
   const img = node('img', undefined, className); img.src = src; img.alt = alt; return img;
 }
 
-export function starRating(rating) {
-  const stars = node('div', undefined, 'review-stars');
-  stars.setAttribute('role', 'img'); stars.setAttribute('aria-label', rating + ' out of 5 stars');
-  for (let i = 0; i < 5; i++) {
-    const star = icon('star'); if (i < rating) star.classList.add('filled'); stars.append(star);
-  }
-  return stars;
-}
-
 export function emptyState(title, description, iconName = 'inbox') {
   const element = node('div', undefined, 'empty-visual');
   element.append(icon(iconName), node('h3', title), node('p', description)); return element;

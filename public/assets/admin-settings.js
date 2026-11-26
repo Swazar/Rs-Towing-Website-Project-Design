@@ -106,7 +106,11 @@ export class AccountSettings {
   }
   renderClock() {
     const now = new Date(), prefs = preferences(this.read());
-    this.$('#settings-clock').textContent = formatClock(now, prefs);
+    const [time, period = ''] = formatClock(now, prefs).split(/\s+/);
+    this.$('#settings-clock-value').textContent = time;
+    const periodLabel = this.$('#settings-clock-period');
+    periodLabel.textContent = period;
+    periodLabel.hidden = !period;
     this.$('#settings-clock').dateTime = now.toISOString();
     this.$('#settings-clock-date').textContent = new Intl.DateTimeFormat('en-US', { dateStyle: 'full', timeZone: prefs.timeZone }).format(now);
     this.$('#settings-clock-zone').textContent = this.$('#profile-timezone').selectedOptions[0]?.textContent || prefs.timeZone;

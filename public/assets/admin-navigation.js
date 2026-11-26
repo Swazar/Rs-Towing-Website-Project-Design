@@ -25,7 +25,13 @@ export class LiquidNavigation {
     }
     const bounds = this.menu.getBoundingClientRect();
     const target = button.getBoundingClientRect();
-    if (!target.width || !target.height) return;
+    if (!target.width || !target.height) {
+      this.animation?.cancel();
+      this.animation = undefined;
+      this.glass.hidden = true;
+      this.menu.classList.remove('liquid-nav-ready', 'is-flowing');
+      return;
+    }
     const destination = { x: target.left - bounds.left + this.menu.scrollLeft, y: target.top - bounds.top + this.menu.scrollTop, width: target.width, height: target.height };
     const visible = !this.glass.hidden;
     // Read the rendered location before cancelling, so rapid clicks flow from
@@ -65,4 +71,49 @@ export class LiquidNavigation {
     this.menu.classList.remove('liquid-nav-ready', 'is-flowing');
     this.glass.remove();
   }
+}
+
+// Keep the same assistant trigger and dialog across layout changes.
+export function setupMobileWorkspace(assistant, notifications, dock) {
+  const document = assistant.ownerDocument;
+  const window = document.defaultView;
+  const desktopParent = assistant.parentElement;
+  const mobile = window.matchMedia?.('(max-width: 760px)');
+  const viewport = window.visualViewport;
+  const root = document.documentElement;
+
+  const reserveDockSpace = () => {
+    const height = mobile?.matches ? Math.ceil(dock.getBoundingClientRect().height) : 0;
+    if (height) root.style.setProperty('--owner-mobile-dock-measured', height + 'px');
+    else root.style.removeProperty('--owner-mobile-dock-measured');
+  };
+
+  const updateKeyboard = () => {
+    const editing = document.activeElement?.matches(
+      'textarea, input:is([type="text"], [type="search"], [type="email"], [type="tel"], [type="number"], [type="url"]), input:not([type]), [contenteditable="true"]'
+    );
+    const keyboardOpen = mobile?.matches && editing && viewport &&
+      viewport.scale <= 1.05 && window.innerHeight - viewport.height > 130;
+    root.toggleAttribute('data-owner-keyboard', Boolean(keyboardOpen));
+  };
+
+  const updateLayout = () => {
+    const parent = mobile?.matches ? notifications.parentElement : desktopParent;
+    if (assistant.parentElement !== parent) {
+      const focused = document.activeElement === assistant;
+      if (mobile?.matches) notifications.before(assistant);
+      else desktopParent.prepend(assistant);
+      if (focused) assistant.focus({ preventScroll: true });
+    }
+    reserveDockSpace();
+    updateKeyboard();
+  };
+
+  if (window.ResizeObserver) new window.ResizeObserver(reserveDockSpace).observe(dock);
+  else window.addEventListener('resize', reserveDockSpace);
+  mobile?.addEventListener?.('change', updateLayout);
+  viewport?.addEventListener('resize', updateKeyboard);
+  document.addEventListener('focusin', updateKeyboard);
+  document.addEventListener('focusout', () => queueMicrotask(updateKeyboard));
+  updateLayout();
 }

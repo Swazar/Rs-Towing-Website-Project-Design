@@ -64,7 +64,19 @@ html:has(.assistant-dialog[open]) { overflow:hidden; }
 
 @media (max-width:760px) {
   .owner-authenticated { --assistant-inset:max(10px,env(safe-area-inset-right)); }
-  .assistant-launcher { right:max(14px,env(safe-area-inset-right)); width:48px; height:48px; }
+  .owner-authenticated .header-right .assistant-launcher {
+    position:static;
+    flex:none;
+    width:44px;
+    height:44px;
+    border-color:#fff;
+    border-radius:12px;
+    background:#ffffffa6;
+    color:#555661;
+    box-shadow:none;
+  }
+  .owner-authenticated .header-right .assistant-launcher:hover { background:#fff; color:var(--brand); }
+  .assistant-launcher .ui-icon { width:20px; height:20px; }
   .assistant-dialog { bottom:max(10px,env(safe-area-inset-bottom)); height:min(590px,calc(100dvh - 20px)); }
   .assistant-compose input[type="text"] { font-size:1rem; }
 }

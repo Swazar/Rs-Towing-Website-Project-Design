@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
   <meta name="referrer" content="no-referrer">
   <title>Owner workspace | RS on the Go LLC</title>
   <link rel="icon" href="/assets/rs-logo.webp" type="image/webp">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400..800&amp;display=swap">
   <link rel="stylesheet" href="/assets/site.css">
-  <link rel="stylesheet" href="/assets/admin.css?v=10">
-  <link rel="stylesheet" href="/assets/admin-shell.css?v=2">
-  <link rel="stylesheet" href="/assets/admin-settings.css">
+  <link rel="stylesheet" href="/assets/admin.css?v=12">
+  <link rel="stylesheet" href="/assets/admin-shell.css?v=4">
+  <link rel="stylesheet" href="/assets/admin-settings.css?v=2">
+  <link rel="stylesheet" href="/assets/admin-reviews.css?v=4">
   <link rel="stylesheet" href="/assets/admin-email.css?v=7">
-  <link rel="stylesheet" href="/assets/admin-assistant.css">
-  <link rel="stylesheet" href="/assets/workspace-customization.css">
+  <link rel="stylesheet" href="/assets/admin-assistant.css?v=2">
+  <link rel="stylesheet" href="/assets/workspace-customization.css?v=2">
   <link rel="stylesheet" href="/assets/workspace-themes.css">
   <link rel="stylesheet" href="/assets/admin-login.css">
-  <script type="module" src="/assets/admin.bundle.js?v=12"></script>
+  <script type="module" src="/assets/admin.bundle.js?v=19"></script>
 </head>
 <body class="admin-page owner-login-screen">
   <a class="skip-link" href="#admin-main">Skip to workspace</a>
@@ -41,7 +42,7 @@
             <div class="notification-footer"><button type="button" class="quiet-button notification-read-all" disabled>Mark all as read</button></div>
           </section>
         </div>
-        <div class="header-account"><button type="button" class="profile-trigger" id="profile-open" aria-label="Open my profile" hidden><span class="owner-avatar" id="header-avatar" aria-hidden="true">RS</span><span class="profile-meta"><span class="account-name" id="header-profile-name">Owner</span><span class="account-role" id="header-profile-role">Owner account</span></span></button><button type="button" class="icon-button" id="owner-logout" aria-label="Sign out" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#log-out"/></svg></button></div>
+        <div class="header-account"><button type="button" class="profile-trigger" id="profile-open" aria-label="Profile and settings" hidden><span class="owner-avatar" id="header-avatar" aria-hidden="true">RS</span><span class="profile-meta"><span class="account-name" id="header-profile-name">Owner</span><span class="account-role" id="header-profile-role">Owner account</span></span></button><button type="button" class="icon-button" id="owner-logout" aria-label="Sign out" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#log-out"/></svg></button></div>
       </div>
     </div>
   </header>
@@ -50,9 +51,9 @@
     <p class="sidebar-label">Workspace</p>
     <nav class="owner-navigation" aria-label="Owner sections">
       <button type="button" data-owner-view="overview" aria-current="page"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#layout-dashboard"/></svg><span>Overview</span></button>
-      <button type="button" data-owner-view="enquiries"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#inbox"/></svg><span>Enquiries</span><span class="nav-count" id="enquiry-count"></span></button>
+      <button type="button" data-owner-view="enquiries"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#inbox"/></svg><span>Enquiries</span><span class="nav-count" id="enquiry-count" hidden></span></button>
       <button type="button" data-owner-view="email" data-permission="email" hidden><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#mail"/></svg><span>Email</span></button>
-      <button type="button" data-owner-view="reviews" data-permission="reviews"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#star"/></svg><span>Reviews</span><span class="nav-count" id="review-count"></span></button>
+      <button type="button" data-owner-view="reviews" data-permission="reviews"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#star"/></svg><span>Reviews</span><span class="nav-count" id="review-count" hidden></span></button>
       <button type="button" data-owner-view="website" data-permission="content"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#panels-top-left"/></svg><span>Website</span></button>
       <button type="button" data-owner-view="settings"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#settings-2"/></svg><span>Settings</span></button>
     </nav>
@@ -143,7 +144,46 @@
       </section>
       <section id="owner-enquiries" class="owner-view" hidden>
         <section class="workspace-panel enquiry-alert-summary" id="enquiry-alert-summary" aria-label="Quote email alerts" hidden><strong>Quote alerts today · Eastern</strong><p id="enquiry-alert-counts" role="status"></p></section>
-        <div class="workspace-panel enquiry-workspace"><div class="inbox-toolbar"><div class="search-field"><label class="sr-only" for="enquiry-search">Search enquiries</label><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#search"/></svg><input id="enquiry-search" type="search" placeholder="Search job number, name, route, or service"></div><div class="filter-field"><label class="sr-only" for="enquiry-filter">Status</label><select id="enquiry-filter"><option value="">All enquiries</option><option value="active">Active requests</option><option>New</option><option>Contacted</option><option>Quoted</option><option>Booked</option><option>Closed</option></select></div><button class="icon-button owner-refresh" type="button" aria-label="Refresh enquiries"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#refresh-cw"/></svg></button></div><details class="enquiry-filter-options"><summary>More filters<svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary><div class="enquiry-extra-filters"><div class="field"><label for="enquiry-from">Received from (Eastern)</label><input id="enquiry-from" type="date"></div><div class="field"><label for="enquiry-to">Received until (Eastern)</label><input id="enquiry-to" type="date"></div><div class="field"><label for="enquiry-sort">Sort by</label><select id="enquiry-sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="pickup">Upcoming pickup</option></select></div><a class="button button-outline" id="enquiry-export" href="/.netlify/functions/owner?action=export" download data-permission="export">Export CSV</a></div></details><div class="owner-columns"><div class="inbox-list-panel"><div class="list-caption"><span>REQUESTS</span><span id="enquiry-result-count"></span></div><div id="enquiry-list" class="owner-list"></div><nav class="enquiry-pagination" id="enquiry-pagination" aria-label="Enquiry pages" hidden><button type="button" class="quiet-button" id="enquiry-previous">Previous</button><span id="enquiry-page-status" role="status"></span><button type="button" class="quiet-button" id="enquiry-next">Next</button></nav></div><div id="enquiry-detail"></div></div></div>
+        <div class="workspace-panel enquiry-workspace" id="enquiry-workspace" data-enquiry-pane="list">
+          <div class="enquiry-inbox-controls">
+            <div class="inbox-toolbar">
+              <div class="search-field">
+                <label class="sr-only" for="enquiry-search">Search enquiries</label>
+                <svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#search"/></svg>
+                <input id="enquiry-search" type="search" placeholder="Search job number, name, route, or service">
+              </div>
+              <div class="filter-field">
+                <label class="sr-only" for="enquiry-filter">Status</label>
+                <select id="enquiry-filter"><option value="">All enquiries</option><option value="active">Active requests</option><option>New</option><option>Contacted</option><option>Quoted</option><option>Booked</option><option>Closed</option></select>
+              </div>
+              <button class="icon-button owner-refresh" type="button" aria-label="Refresh enquiries"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#refresh-cw"/></svg></button>
+            </div>
+            <details class="enquiry-filter-options">
+              <summary>More filters<svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#chevron-down"/></svg></summary>
+              <div class="enquiry-extra-filters">
+                <div class="field"><label for="enquiry-from">Received from (Eastern)</label><input id="enquiry-from" type="date"></div>
+                <div class="field"><label for="enquiry-to">Received until (Eastern)</label><input id="enquiry-to" type="date"></div>
+                <div class="field"><label for="enquiry-sort">Sort by</label><select id="enquiry-sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="pickup">Upcoming pickup</option></select></div>
+                <a class="button button-outline" id="enquiry-export" href="/.netlify/functions/owner?action=export" download data-permission="export">Export CSV</a>
+              </div>
+            </details>
+          </div>
+          <div class="owner-columns">
+            <div class="inbox-list-panel">
+              <div class="list-caption"><span>REQUESTS</span><span id="enquiry-result-count"></span></div>
+              <div id="enquiry-list" class="owner-list"></div>
+              <nav class="enquiry-pagination" id="enquiry-pagination" aria-label="Enquiry pages" hidden>
+                <button type="button" class="quiet-button" id="enquiry-previous">Previous</button>
+                <span id="enquiry-page-status" role="status"></span>
+                <button type="button" class="quiet-button" id="enquiry-next">Next</button>
+              </nav>
+            </div>
+            <div class="enquiry-detail-pane">
+              <button type="button" class="quiet-button enquiry-list-back" id="enquiry-list-back">Back to enquiries</button>
+              <div id="enquiry-detail"></div>
+            </div>
+          </div>
+        </div>
       </section>
       <section id="owner-email-view" class="owner-view" hidden>
         <section class="workspace-panel gmail-workbench" aria-label="Gmail workspace">
@@ -271,8 +311,46 @@
           </dialog>
         </section>
       </section>
-      <section id="owner-reviews" class="owner-view" hidden>
-        <div class="section-toolbar"><p class="owner-help">Preview customer feedback before publishing.</p><div class="toolbar-actions"><label class="sr-only" for="review-filter">Filter reviews</label><select id="review-filter"><option value="">All reviews</option><option value="pending">Awaiting review</option><option value="Published">Published</option><option value="private">Private feedback</option><option value="Spam">Spam</option></select><button class="icon-button owner-refresh" type="button" aria-label="Refresh reviews"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#refresh-cw"/></svg></button></div></div><div id="owner-review-list" class="owner-review-list"></div>
+      <section id="owner-reviews" class="owner-view reviews-workspace" hidden>
+        <div class="workspace-panel review-inbox">
+          <section class="review-homepage" aria-labelledby="review-homepage-title">
+            <div class="review-homepage-heading">
+              <div>
+                <h2 id="review-homepage-title" tabindex="-1">Homepage reviews</h2>
+                <p id="review-slots-status"></p>
+              </div>
+              <a class="quiet-button" href="/#reviews" target="_blank" rel="noopener" aria-label="View homepage reviews (opens in a new tab)">View homepage</a>
+            </div>
+            <ul id="review-homepage-slots" class="review-homepage-slots" aria-label="Homepage review slots"></ul>
+          </section>
+          <section class="review-summary" aria-labelledby="review-summary-title">
+            <div class="review-average">
+              <h2 id="review-summary-title">Average rating</h2>
+              <p class="review-average-value"><span id="review-average-score">&mdash;</span> <span id="review-average-scale" hidden>/ 5</span></p>
+              <p id="review-average-count" class="review-average-count"></p>
+            </div>
+            <figure class="review-trend">
+              <figcaption id="review-trend-title">Reviews received <span>Past 6 months</span></figcaption>
+              <ol id="review-trend-months" aria-labelledby="review-trend-title"></ol>
+            </figure>
+          </section>
+          <div class="review-toolbar">
+            <div class="review-categories" role="group" aria-label="Review category">
+              <button type="button" data-review-category="ready" aria-pressed="true">Ready to show <span class="review-category-count"></span></button>
+              <button type="button" data-review-category="private" aria-pressed="false">Private <span class="review-category-count"></span></button>
+              <button type="button" data-review-category="spam" aria-pressed="false">Spam <span class="review-category-count"></span></button>
+            </div>
+            <div class="review-search-tools">
+              <label class="sr-only" for="review-search">Search the selected reviews</label>
+              <input id="review-search" type="search" placeholder="Search reviews">
+              <button class="icon-button owner-refresh" type="button" aria-label="Refresh reviews"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#refresh-cw"/></svg></button>
+            </div>
+          </div>
+          <div class="review-list-info">
+            <p class="review-list-note" id="review-list-note" hidden></p>
+          </div>
+          <ul id="owner-review-list" class="review-rows" aria-label="Reviews"></ul>
+        </div>
       </section>
       <section id="owner-website" class="owner-view" hidden>
         <div class="website-editor-layout"><form id="owner-content-form" class="owner-content-form" novalidate>
@@ -292,7 +370,17 @@
             <section class="workspace-panel settings-profile" aria-labelledby="profile-title">
               <div class="settings-card-heading"><span class="settings-card-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#user-round"/></svg></span><div><h2 id="profile-title">Your profile</h2><p>A little more you. Personalize your workspace.</p></div></div>
               <div class="settings-card-body">
-                <div class="profile-photo-picker"><div id="profile-photo-preview" class="profile-photo-preview">RS</div><div><button type="button" class="button button-outline" id="profile-photo-pick">Change photo</button><input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden><button type="button" class="quiet-button" id="profile-remove-photo">Remove photo</button><p class="field-hint">JPG, PNG, or WebP · up to 5 MB</p></div></div>
+                <div class="profile-photo-picker">
+                  <div id="profile-photo-preview" class="profile-photo-preview">RS</div>
+                  <div class="profile-photo-controls">
+                    <div class="profile-photo-actions">
+                      <button type="button" class="button button-outline" id="profile-photo-pick">Change photo</button>
+                      <button type="button" class="quiet-button" id="profile-remove-photo" aria-label="Remove photo">Remove</button>
+                    </div>
+                    <input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+                    <p class="field-hint">JPG, PNG, or WebP · up to 5 MB</p>
+                  </div>
+                </div>
                 <div class="field"><label for="profile-display-name">Display name</label><input id="profile-display-name" name="displayName" maxlength="60" required autocomplete="nickname" placeholder="Your name"></div>
                 <div class="field"><label for="profile-job-title">Job title <span class="settings-optional">(optional)</span></label><input id="profile-job-title" name="jobTitle" maxlength="80" autocomplete="organization-title" placeholder="For example, Owner / Operator"></div>
                 <div class="field"><label for="profile-phone">Phone <span class="settings-optional">(optional)</span></label><input id="profile-phone" name="phone" type="tel" maxlength="40" autocomplete="tel" placeholder="Your contact number"></div>
@@ -303,7 +391,7 @@
             <section class="workspace-panel settings-time" aria-labelledby="settings-time-title">
               <div class="settings-card-heading"><span class="settings-card-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#clock"/></svg></span><div><h2 id="settings-time-title">Date &amp; time</h2><p>Make the dashboard work on your time.</p></div></div>
               <div class="settings-card-body">
-                <div class="settings-clock-preview"><span>YOUR CLOCK</span><time id="settings-clock">--:--</time><p id="settings-clock-date"></p><small id="settings-clock-zone"></small></div>
+                <div class="settings-clock-preview"><span>YOUR CLOCK</span><time id="settings-clock"><span id="settings-clock-value">--:--</span> <span id="settings-clock-period" hidden></span></time><p id="settings-clock-date"></p><small id="settings-clock-zone"></small></div>
                 <div class="field"><label for="profile-timezone">Timezone</label><select id="profile-timezone" name="timeZone" required></select><button type="button" class="quiet-button settings-device-time" id="settings-device-time">Use my device timezone</button></div>
                 <div class="field"><label for="profile-time-format">Clock format</label><select id="profile-time-format" name="timeFormat"><option value="12h">12-hour · 3:30 PM</option><option value="24h">24-hour · 15:30</option></select></div>
                 <div class="settings-time-note"><strong>For your account</strong><p>Your timezone applies to the clock and received or updated timestamps. Pickup schedules, reminders, and received-date filters follow Eastern Time.</p></div>
@@ -314,8 +402,8 @@
               <div class="settings-card-body"><div id="workspace-themes"></div><p class="workspace-control-hint">Choose a theme, then Save changes to apply it to your admin workspace.</p></div>
             </section>
             <section class="workspace-panel settings-workspace" aria-labelledby="workspace-appearance-title">
-              <div class="settings-card-heading"><span class="settings-card-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#layout-dashboard"/></svg></span><div><h2 id="workspace-appearance-title">Your workspace</h2><p>One preset controls layout, text, and spacing.</p></div></div>
-              <div class="settings-card-body"><div id="workspace-customization"></div><p class="workspace-control-hint">Mobile uses one fixed layout. Presets and panel order apply only on desktop.</p></div>
+              <div class="settings-card-heading"><span class="settings-card-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#layout-dashboard"/></svg></span><div><h2 id="workspace-appearance-title">Your workspace</h2><p>Choose which panels appear on your Overview.</p></div></div>
+              <div class="settings-card-body"><div id="workspace-customization"></div></div>
             </section>
           </fieldset>
           <div class="settings-save-bar"><div><strong id="settings-save-label">Your settings are up to date.</strong><p id="profile-status" role="status" aria-live="polite"></p></div><div><button type="button" class="quiet-button" id="profile-discard" disabled>Discard changes</button><button type="submit" class="button" id="profile-save" disabled>Save changes</button></div></div>
@@ -376,7 +464,6 @@
     <p role="status" class="field-hint"></p>
     <button type="button" class="button" data-keep-session>Stay signed in</button>
   </dialog>
-  <dialog class="review-preview-dialog" id="review-preview-dialog" aria-labelledby="review-preview-title"><div class="review-dialog-heading"><div><p class="owner-eyebrow">CUSTOMER VIEW</p><h2 id="review-preview-title">Review card preview</h2></div><button type="button" class="icon-button" id="review-preview-close" aria-label="Close review preview"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button></div><div id="review-preview-body"></div><p class="field-hint">Previewing does not publish this review.</p></dialog>
   <dialog class="owner-small-dialog" id="reminder-dialog" aria-labelledby="reminder-title"><div class="review-dialog-heading"><div><p class="owner-eyebrow">YOUR WORKSPACE</p><h2 id="reminder-title">Add reminder</h2></div><button type="button" class="icon-button" data-close-dialog="reminder-dialog" aria-label="Close reminder"><svg class="ui-icon" aria-hidden="true"><use href="/assets/admin-icons.svg#x"/></svg></button></div><form id="reminder-form"><div class="field"><label for="reminder-text">What needs doing?</label><input id="reminder-text" name="title" maxlength="120" required placeholder="For example, check trailer tires"></div><div class="field"><label for="reminder-date">Date</label><input id="reminder-date" name="date" type="date" required></div><label class="checkbox" id="reminder-done-field" hidden><input type="checkbox" name="done">Completed</label><p class="field-hint">A reminder in this workspace. No message will be sent.</p><p role="status" id="reminder-status" class="field-error"></p><button type="submit" class="button">Save reminder</button></form></dialog>
   <dialog class="website-image-dialog" id="image-picker-dialog" aria-labelledby="image-picker-title">
     <form id="image-picker-form" class="image-picker-form">

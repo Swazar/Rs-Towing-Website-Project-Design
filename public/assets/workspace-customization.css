@@ -63,18 +63,12 @@ html.workspace-customized { font-size:calc(100% * var(--workspace-font-scale,1))
 .owner-authenticated #workspace-title { scroll-margin-top:80px; }
 .owner-authenticated #workspace-title:focus { outline:none; }
 @media (max-width:1100px) {
+  .workspace-desktop-only { display:none; }
   .owner-authenticated .overview-grid,.owner-authenticated .overview-grid[data-layout] { grid-template-columns:minmax(0,1fr); }
 }
 @media (max-width:760px) {
   .owner-authenticated .owner-header { width:auto; justify-self:stretch; }
-  .workspace-preset-cards { grid-template-columns:1fr; gap:12px; }
-  .admin-page .workspace-preset-card { display:grid; grid-template-columns:100px 1fr; grid-template-rows:1fr 1fr; gap:0 14px; align-items:center; padding:12px; }
-  .workspace-preset-scene { grid-row:1 / span 2; height:104px; padding:9px; }
-  .workspace-preset-card strong { align-self:end; margin-top:0; margin-right:20px; }
-  .workspace-preset-card .preset-description { align-self:start; }
-  .admin-page .workspace-preset-card input { top:14px; right:12px; bottom:auto; }
   .workspace-panel-control { flex-wrap:wrap; gap:0; padding-bottom:12px; }
-  .workspace-order-actions { width:100%; padding-left:29px; }
   .owner-authenticated .overview-grid { gap:min(var(--workspace-gap),22px); }
 }
 @media (max-height:500px) {

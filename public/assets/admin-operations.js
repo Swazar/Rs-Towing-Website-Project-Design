@@ -74,7 +74,9 @@ export async function prepareAvatar(file) {
   try {
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 256;
     const context = canvas.getContext('2d'); context.fillStyle = '#ffffff'; context.fillRect(0, 0, 256, 256);
-    const side = Math.min(bitmap.width, bitmap.height); context.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 256, 256);
+    const scale = 256 / Math.max(bitmap.width, bitmap.height);
+    const width = bitmap.width * scale, height = bitmap.height * scale;
+    context.drawImage(bitmap, (256 - width) / 2, (256 - height) / 2, width, height);
     const result = canvas.toDataURL('image/jpeg', .82); if (result.length > 105000) throw new Error('Choose a simpler or smaller profile photo.'); return result;
   } finally { bitmap.close(); }
 }

@@ -5,14 +5,14 @@ import { enquiryHash, enquiryLinkNumber } from '../domain/jobs/job-number.ts';
 import { isQuote } from '../domain/jobs/types.ts';
 import { completeOwnerAccess, prepareOwnerAccess, signInWithGoogle } from '../owner-access.js';
 import { clearLoginQuery, createAdminLogin } from '../../public/assets/admin-login.js';
-import { node, icon, initials, picture, statusLabel, starRating, emptyState } from '../../public/assets/admin-ui.js';
+import { node, icon, initials, picture, statusLabel, emptyState } from '../../public/assets/admin-ui.js';
 import { OperationsBoard } from '../../public/assets/admin-operations.js';
 import { calendarEvents } from '../../public/assets/admin-data.js';
 import { businessDateKey as dateKey } from '../domain/jobs/dates.ts';
 import { AccountSettings } from '../../public/assets/admin-settings.js';
 import { preferences, formatTimestamp, formatBusinessTime } from '../../public/assets/admin-preferences.js';
 import { WorkspaceNotice } from '../../public/assets/admin-notice.js';
-import { LiquidNavigation } from '../../public/assets/admin-navigation.js';
+import { LiquidNavigation, setupMobileWorkspace } from '../../public/assets/admin-navigation.js';
 import { WorkspaceLayout } from '../../public/assets/workspace-layout.js';
 import { WorkspaceIdle } from '../../public/assets/admin-session.js';
 import { recoveryPreview } from '../../public/assets/admin-recovery.js';
@@ -20,6 +20,7 @@ import { WorkspaceAssistant } from '../../public/assets/admin-assistant.js';
 import { WorkspaceEmail } from './email.ts';
 import { SubmissionBackupsPanel } from './submission-backups.ts';
 import { WorkspaceNotifications } from './notifications.ts';
+import { ReviewWorkspace } from './reviews.js';
 
 clearLoginQuery(window.location, window.history);
 const $ = selector => document.querySelector(selector);
@@ -29,6 +30,7 @@ const signIn = $('#owner-signin');
 const navigation = new LiquidNavigation($('.owner-navigation'));
 const workspaceLayout = new WorkspaceLayout(document, () => switchView('settings'));
 const assistant = new WorkspaceAssistant({ onExpired: lockWorkspace });
+setupMobileWorkspace($('#assistant-open'), $('#workspace-notifications'), $('#owner-sidebar'));
 const emailView = $('#owner-email-view');
 const email = new WorkspaceEmail(emailView, api);
 let items = [], localPreview = false;
@@ -45,20 +47,21 @@ const accountSettings = new AccountSettings({ api, applyWorkspace: (value, permi
   workspaceLayout.apply(value, permissions);
   if (website.published) operations.update(items, reminders.data);
 }, onSaved: saved => {
-  profile = saved; applyProfile(); renderOverview(); enquiries.render(); renderReviews();
+  profile = saved; applyProfile(); renderOverview(); enquiries.render(); reviewWorkspace.render();
   announce('Settings saved', { detail: 'Your profile, time, and workspace preferences are updated.' });
 } });
 const views = {
   overview: ['Overview', 'YOUR BUSINESS, AT A GLANCE', 'A clear view of what needs your attention.'],
   enquiries: ['Enquiries', 'REQUESTS & JOBS', 'Choose a request to see its route, customer, and next steps.'],
   email: ['Email', '', ''],
-  reviews: ['Customer reviews', 'FEEDBACK & REPUTATION', 'Review the original feedback and choose what appears on your website.'],
+  reviews: ['Customer reviews', '', 'Choose which customer reviews appear on your homepage.'],
   website: ['Your website', 'CONTENT STUDIO', 'Open a section to edit. See your changes before you publish.'],
   settings: ['Settings', 'YOUR WORKSPACE, YOUR WAY', 'Personalize your layout, profile, and time preferences.'],
 };
 const viewPermissions = { reviews: 'reviews', website: 'content', email: 'email' };
 const quotes = () => items.filter(isQuote);
 const reviews = () => items.filter(item => (item.form_name || item.data['form-name']) === 'customer-review');
+const newPublishableReviews = () => reviews().filter(item => !item.state && item.data['publish-permission'] === 'yes').length;
 const date = value => formatTimestamp(value, profile.data);
 const shortDate = value => value ? new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: preferences(profile.data).timeZone }) : '';
 const notifications = new WorkspaceNotifications($('#workspace-notifications'), {
@@ -66,10 +69,8 @@ const notifications = new WorkspaceNotifications($('#workspace-notifications'), 
   refresh: loadItems,
   openEnquiry: showRequest,
   openReview: item => {
-    $('#review-filter').value = 'pending';
-    renderReviews();
     switchView('reviews');
-    previewReview(item);
+    reviewWorkspace.openReview(item.id);
   },
 });
 const login = createAdminLogin({ api, completeAccess: completeOwnerAccess, googleSignIn: signInWithGoogle, onSignedIn: start });
@@ -77,6 +78,12 @@ const announce = (text, options) => {
   if (!signIn.hidden) { notice.hide(); login.message(text, options); }
   else notice.show(text, options);
 };
+const reviewWorkspace = new ReviewWorkspace($('#owner-reviews'), {
+  date: shortDate,
+  save: data => api('review', data),
+  refresh: loadItems,
+  announce,
+});
 
 function showLogin() {
   workspace.hidden = true;
@@ -144,10 +151,13 @@ function switchView(view, jobNumber) {
     else button.removeAttribute('aria-current');
   });
   navigation.select(document.querySelector('.owner-navigation [aria-current]'));
+  if (view === 'settings') $('#profile-open').setAttribute('aria-current', 'page');
+  else $('#profile-open').removeAttribute('aria-current');
   assistant.setView(view);
   accountSettings.setActive(view === 'settings');
   if (view === 'settings' && changed && permissions.includes('backups')) void backupsPanel.load();
-  history.replaceState(null, '', view === 'enquiries' && jobNumber ? enquiryHash(jobNumber) : '#' + view);
+  const hash = view === 'enquiries' && jobNumber ? enquiryHash(jobNumber) : '#' + view;
+  if (location.hash !== hash) history.replaceState(null, '', hash);
   email.setActive(view === 'email');
   if (changed) {
     const heading = $('#workspace-title'); heading.tabIndex = -1; heading.focus({ preventScroll: true });
@@ -172,16 +182,32 @@ const enquiries = new Enquiries({
   onHistory: openRecovery,
   onSave: (item, fields, revision) => api('enquiry', { id: item.id, revision, ...fields }),
   onSaved: saved => { addActivity(saved); renderOverview(); announce('Enquiry saved.'); },
-  onSelect: item => {
-    if (item.jobNumber) history.replaceState(null, '', enquiryHash(item.jobNumber));
+  onSelect: (item, compact) => {
+    if (!item.jobNumber) return;
+    const hash = enquiryHash(item.jobNumber);
+    if (hash === location.hash) return;
+    if (compact) history.pushState({ enquiryFromList: true }, '', hash);
+    else history.replaceState(null, '', hash);
   },
+  onBack: returnToEnquiries,
   onError: error => announce(error.message || 'The enquiry could not be updated.', { tone: 'error' }),
 });
+
+function openEnquiryList(restorePosition = false) {
+  enquiries.showInbox(restorePosition && !$('#owner-enquiries').hidden);
+  switchView('enquiries');
+}
+
+function returnToEnquiries() {
+  if (history.state?.enquiryFromList) history.back();
+  else openEnquiryList(true);
+}
 
 function showRequest(item) {
   if (!item) return;
   enquiries.open(item);
   switchView('enquiries', item.jobNumber);
+  enquiries.focusDetail();
 }
 
 function renderOverview(inboxFresh = false) {
@@ -189,19 +215,19 @@ function renderOverview(inboxFresh = false) {
   const all = quotes();
   const newCount = all.filter(item => !item.state || item.state.status === 'New').length;
   const active = all.filter(item => item.state && ['Contacted', 'Quoted', 'Booked'].includes(item.state.status)).length;
-  const pending = reviews().filter(item => !item.state).length;
+  const pending = newPublishableReviews();
   const metrics = $('#overview-metrics'); metrics.replaceChildren();
   for (const [label, count, hint, iconName, view, filter] of [
     ['New enquiries', newCount, 'Waiting for your first reply', 'inbox', 'enquiries', 'New'],
     ['Active requests', active, 'Contacted, quoted, or booked', 'truck', 'enquiries', 'active'],
-    ...(permissions.includes('reviews') ? [['Reviews to check', pending, 'Feedback awaiting your review', 'star', 'reviews', 'pending']] : []),
+    ...(permissions.includes('reviews') ? [['Reviews to check', pending, 'New feedback you can show', 'star', 'reviews', 'ready']] : []),
   ]) {
     const card = node('button', undefined, 'metric-card'); card.type = 'button';
     const graphic = node('span', undefined, 'metric-icon'); graphic.append(icon(iconName));
     card.append(node('span', label, 'metric-label'), graphic, node('strong', String(count)), node('small', hint));
     card.addEventListener('click', () => {
       if (view === 'enquiries') enquiries.setFilter(filter);
-      else { $('#review-filter').value = filter; renderReviews(); }
+      else reviewWorkspace.setFilter(filter);
       switchView(view);
     }); metrics.append(card);
   }
@@ -223,8 +249,8 @@ function renderOverview(inboxFresh = false) {
   });
   if (pending) {
     const row = node('button', undefined, 'attention-row'); row.type = 'button'; const text = node('span');
-    text.append(node('strong', pending + (pending === 1 ? ' review to check' : ' reviews to check')), node('small', 'Preview feedback and publication permission'));
-    row.append(icon('star'), text); row.addEventListener('click', () => { $('#review-filter').value = 'pending'; renderReviews(); switchView('reviews'); }); attention.append(row);
+    text.append(node('strong', pending + (pending === 1 ? ' review to check' : ' reviews to check')), node('small', 'Decide what to show on the homepage'));
+    row.append(icon('star'), text); row.addEventListener('click', () => { reviewWorkspace.setFilter('ready'); switchView('reviews'); }); attention.append(row);
   }
   if (!upcoming.length && !pending) attention.append(emptyState('You’re up to date', 'No scheduled follow-ups or unchecked reviews.', 'check'));
   renderActivity();
@@ -284,69 +310,6 @@ $('#recovery-restore').addEventListener('click', async () => {
   }
 });
 
-function previewReview(item) {
-  const body = $('#review-preview-body'); body.replaceChildren(starRating(Number(item.data.rating)));
-  const characters = Array.from(item.data.review || ''), short = characters.length > 220;
-  const start = characters.slice(0, 220).join(''), space = start.lastIndexOf(' ');
-  body.append(node('blockquote', short ? (space > 176 ? start.slice(0, space) : start) + '…' : item.data.review));
-  if (short) { const more = node('details', undefined, 'review-preview-more'); more.append(node('summary', 'Read full review'), node('p', item.data.review)); body.append(more); }
-  const person = node('div', undefined, 'review-card-person'), copy = node('div'); copy.append(node('h3', item.data.first_name || 'Customer'), node('time', shortDate(item.created_at))); person.append(node('span', initials(item.data.first_name), 'initials'), copy); body.append(person);
-  $('#review-preview-dialog').showModal();
-}
-
-function renderReviews() {
-  const all = reviews(), filter = $('#review-filter').value;
-  $('#review-count').textContent = String(all.filter(item => !item.state).length);
-  const filtered = all.filter(item => !filter || (filter === 'pending' ? !item.state : filter === 'private' ? item.data['publish-permission'] !== 'yes' : item.state?.publication === filter));
-  const container = $('#owner-review-list'); container.replaceChildren();
-  if (!filtered.length) container.append(emptyState('No reviews here', filter ? 'Try a different filter.' : 'Customer feedback will appear here.', 'star'));
-  filtered.forEach(item => {
-    const card = node('article', undefined, 'workspace-panel review-admin-card'), person = node('div', undefined, 'review-card-person'), copy = node('div');
-    copy.append(node('h3', item.data.first_name || 'Customer'), node('time', date(item.created_at))); person.append(node('span', initials(item.data.first_name), 'initials'), copy);
-    const publication = item.state?.publication;
-    const hasConsent = item.data['publish-permission'] === 'yes';
-    const visibility = hasConsent ? 'Publication permitted' : 'Private feedback · Customer did not grant permission to publish';
-    card.append(person, starRating(Number(item.data.rating)), node('blockquote', item.data.review),
-      node('p', (publication || 'Awaiting review') + ' · ' + visibility, 'review-card-state'));
-    const footer = node('div', undefined, 'review-card-footer');
-    const preview = node('button', undefined, 'quiet-button');
-    preview.type = 'button';
-    preview.append(icon('eye'), node('span', ' Preview'));
-    preview.addEventListener('click', () => previewReview(item));
-    const menu = node('details', undefined, 'review-actions');
-    const summary = node('summary', 'Actions ');
-    summary.append(icon('chevron-down'));
-    const choices = node('div', undefined, 'review-actions-menu');
-    const actions = [];
-    if (publication === 'Spam') {
-      actions.push(['Restore review', 'Unpublished', 'Review removed from spam.']);
-    } else {
-      if (publication === 'Published') actions.push(['Unpublish', 'Unpublished', 'Review unpublished.']);
-      else if (hasConsent) actions.push(['Publish', 'Published', 'Review published.']);
-      actions.push(['Mark as spam', 'Spam', 'Review marked as spam.']);
-    }
-    for (const [label, next, success] of actions) {
-      const button = node('button', label);
-      button.type = 'button';
-      button.addEventListener('click', () => run(button, async () => {
-        try {
-          await api('review', { id: item.id, revision: item.revision, publication: next });
-        } catch (error) {
-          if (error.status === 409) await loadItems();
-          throw error;
-        }
-        await loadItems();
-        announce(success);
-      }));
-      choices.append(button);
-    }
-    menu.append(summary, choices);
-    footer.append(preview, menu);
-    card.append(footer);
-    container.append(card);
-  });
-}
-
 async function loadItems() {
   const request = ++inboxRequest;
   const result = await api('list');
@@ -355,7 +318,11 @@ async function loadItems() {
   reminders = result.reminders || { data: [], revision: null }; activity = result.activity || [];
   renderQuoteAlerts(result.quoteAlerts);
   enquiries.setItems(quotes());
-  renderReviews(); renderOverview(true);
+  const pendingReviews = newPublishableReviews();
+  $('#review-count').textContent = String(pendingReviews);
+  $('#review-count').hidden = pendingReviews === 0;
+  reviewWorkspace.load(reviews(), result.homepageReviews || []);
+  renderOverview(true);
 }
 
 const backupsPanel = new SubmissionBackupsPanel($('#submission-backups'), {
@@ -424,12 +391,12 @@ $('#reminder-form').addEventListener('submit', event => {
 });
 $('#profile-open').addEventListener('click', () => switchView('settings'));
 
-document.querySelectorAll('[data-owner-view]').forEach(button => button.addEventListener('click', () => switchView(button.dataset.ownerView)));
-$('#review-filter').addEventListener('change', renderReviews);
+document.querySelectorAll('[data-owner-view]').forEach(button => button.addEventListener('click', () => {
+  if (button.dataset.ownerView === 'enquiries') returnToEnquiries();
+  else switchView(button.dataset.ownerView);
+}));
 document.querySelectorAll('.owner-refresh').forEach(button => button.addEventListener('click', () => run(button, async () => { await loadItems(); announce('Enquiries and reviews refreshed.'); })));
-$('#review-preview-close').addEventListener('click', () => $('#review-preview-dialog').close());
 $('#website-versions').addEventListener('click', event => run(event.currentTarget, () => openRecovery()));
-document.addEventListener('click', event => { document.querySelectorAll('.review-actions[open]').forEach(menu => { if (!menu.contains(event.target)) menu.open = false; }); });
 window.addEventListener('beforeunload', event => { if (!sessionLocked && (website.hasDraft || enquiries.dirty || accountSettings.dirty)) { event.preventDefault(); event.returnValue = ''; } });
 
 $('#owner-logout').addEventListener('click', event => run(event.currentTarget, async () => { await api('logout', {}); location.reload(); }));
@@ -437,13 +404,18 @@ $('#owner-logout').addEventListener('click', event => run(event.currentTarget, a
 function openWorkspaceHash() {
   const number = enquiryLinkNumber(location.hash);
   if (number) {
-    const found = enquiries.openNumber(number);
-    switchView('enquiries', found ? number : undefined);
-    if (!found) announce('Job number unavailable', { tone: 'info', detail: 'Try searching Enquiries for the job number.' });
+    if (enquiries.openNumber(number, history.state?.enquiryFromList === true)) {
+      switchView('enquiries', number);
+      enquiries.focusDetail();
+    } else {
+      openEnquiryList();
+      announce('Job number unavailable', { tone: 'info', detail: 'Try searching Enquiries for the job number.' });
+    }
     return;
   }
   const view = location.hash.slice(1);
-  switchView(Object.hasOwn(views, view) ? view : 'overview');
+  if (view === 'enquiries') openEnquiryList(true);
+  else switchView(Object.hasOwn(views, view) ? view : 'overview');
 }
 window.addEventListener('hashchange', () => { if (!workspace.hidden) openWorkspaceHash(); });
 

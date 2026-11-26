@@ -1,3 +1,4 @@
+import { homepageReviewLimit } from '../public/assets/public-reviews.js';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 
@@ -54,16 +55,28 @@ assert.equal((await request('owner?action=enquiry', {
 })).status, 409);
 await submit({ 'form-name': 'customer-review', first_name: marker, review: 'Fictional feedback for the local publishing test.', rating: '4', email: 'private@example.com', 'publish-permission': 'yes' });
 await submit({ 'form-name': 'customer-review', first_name: marker + ' private', review: 'Private local test feedback.', rating: '2' });
-let list = (await request('owner?action=list')).data.items;
-const publicItem = list.find(item => item.data.first_name === marker);
-const privateItem = list.find(item => item.data.first_name === marker + ' private');
+const starting = (await request('owner?action=list')).data;
+const publicItem = starting.items.find(item => item.data.first_name === marker);
+const privateItem = starting.items.find(item => item.data.first_name === marker + ' private');
 assert.equal((await request('owner?action=review', { id: privateItem.id, publication: 'Published', revision: privateItem.revision })).status, 400);
-assert.equal((await request('owner?action=review', { id: publicItem.id, publication: 'Published', revision: publicItem.revision })).status, 200);
+const add = await request('owner?action=review', { id: publicItem.id, publication: 'Published', revision: publicItem.revision });
 const reviews = (await request('site-content')).data.reviews;
-assert.ok(reviews.some(review => review.name === marker));
+assert.ok(reviews.length <= homepageReviewLimit);
 assert.ok(!JSON.stringify(reviews).includes('private@example.com'));
-list = (await request('owner?action=list')).data.items;
-const published = list.find(item => item.id === publicItem.id);
-assert.equal((await request('owner?action=review', { id: publicItem.id, publication: 'Unpublished', revision: published.revision })).status, 200);
-assert.ok(!(await request('site-content')).data.reviews.some(review => review.name === marker));
+const publication = (await request('owner?action=list')).data;
+assert.ok(!publication.homepageReviews.some(review => review.id === privateItem.id));
+if (starting.homepageReviews.length === homepageReviewLimit) {
+  assert.equal(add.status, 409);
+  assert.deepEqual(publication.homepageReviews, starting.homepageReviews);
+  assert.ok(!reviews.some(review => review.name === marker));
+} else {
+  assert.equal(add.status, 200);
+  const onHomepage = publication.homepageReviews.find(review => review.id === publicItem.id);
+  assert.equal(onHomepage.name, marker);
+  assert.equal(onHomepage.revision, publication.items.find(item => item.id === publicItem.id).revision);
+  assert.ok(!Object.hasOwn(reviews.find(review => review.name === marker), 'id'));
+  assert.equal((await request('owner?action=review', { id: publicItem.id, publication: 'Unpublished', revision: onHomepage.revision })).status, 200);
+  assert.ok(!(await request('site-content')).data.reviews.some(review => review.name === marker));
+  assert.ok(!(await request('owner?action=list')).data.homepageReviews.some(review => review.id === publicItem.id));
+}
 console.log('Passed local submissions/retries, enquiry saves, content publishing, stale-edit protection, origin protection, consent checks, and public/private separation.');

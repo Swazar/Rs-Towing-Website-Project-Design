@@ -18,7 +18,7 @@ export function workspaceKnowledge(permissions) {
     'Owners can use Version history beside Website publish controls or in Notes & status for a job. Restoring website content publishes that version and keeps the displaced version.',
     'Optional quote alerts and a daily next-day pickup digest use the production email configuration. The assistant cannot verify delivery or inspect server logs.',
   );
-  if (permissions.includes('reviews')) facts.push('In Reviews, check consent and use Actions to publish, unpublish, or mark feedback as spam.');
+  if (permissions.includes('reviews')) facts.push('Reviews has three homepage slots at the top. Select an empty slot and choose Add to homepage on an eligible review. If all three slots are filled, remove a review to make room. Private feedback stays inside the workspace.');
   if (permissions.includes('export')) facts.push('Owners can export the filtered enquiry list as CSV from More filters.');
   return facts;
 }
