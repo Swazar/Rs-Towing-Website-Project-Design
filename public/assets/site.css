@@ -334,12 +334,12 @@ h2 { font-size: clamp(1.95rem, 3.5vw, 3rem); }
   }
   .service-row summary::-webkit-details-marker { display: none; }
   .service-row summary::after {
-    content: ""; flex: none; width: 10px; height: 10px; margin: 0 5px 4px 0;
-    border: solid var(--brand); border-width: 0 2px 2px 0; transform: rotate(45deg);
+    content: ""; flex: none; width: 10px; height: 10px; margin-right: 5px;
+    border: solid var(--brand); border-width: 0 2px 2px 0; transform: translateY(-2px) rotate(45deg);
   }
-  .service-row details[open] summary::after { transform: rotate(225deg); margin-block: 4px 0; }
+  .service-row details[open] summary::after { transform: translateY(2px) rotate(225deg); }
   .service-row .text-link { min-height: 48px; }
-  .service-row details[open] { padding-bottom: 6px; }
+  .service-row details > .text-link { margin-bottom: 6px; }
   .work-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
   .work-grid img { height: auto; aspect-ratio: 4 / 3; }
   .work-grid figcaption { line-height: 1.35; }
@@ -392,16 +392,16 @@ h2 { font-size: clamp(1.95rem, 3.5vw, 3rem); }
   .quote-success-icon { animation: quote-success-pop .56s cubic-bezier(.21, .78, .27, 1) both; }
   .quote-success-check { animation: quote-success-tick .32s .14s ease-out both; }
   .quote-success-bubble { animation: quote-success-burst .62s .09s cubic-bezier(.18, .8, .27, 1) both; }
-  .faq-list summary::after { transition: transform .22s ease; }
+  :is(.faq-list, .service-list) summary::after { transition: transform .22s ease; }
   @supports (interpolate-size: allow-keywords) and selector(details::details-content) {
-    .faq-list details { interpolate-size: allow-keywords; }
-    .faq-list details::details-content {
+    :is(.faq-list, .service-list) details { interpolate-size: allow-keywords; }
+    :is(.faq-list, .service-list) details::details-content {
       block-size: 0;
       opacity: 0;
       overflow: clip;
       transition: block-size .24s ease, opacity .2s ease, content-visibility .24s allow-discrete;
     }
-    .faq-list details[open]::details-content { block-size: auto; opacity: 1; }
+    :is(.faq-list, .service-list) details[open]::details-content { block-size: auto; opacity: 1; }
   }
 }
 
