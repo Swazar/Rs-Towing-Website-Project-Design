@@ -1,3 +1,4 @@
+import { loadIdentitySignIn, requireIdentityUser } from '../netlify/lib/workspace-user.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { resolveLoginEmail } from '../netlify/lib/login-identifier.mjs';
@@ -63,5 +64,51 @@ test('password login verifies the mapped email, rejects wrong credentials, and e
     for (const [key, value] of Object.entries({ OWNER_LOGIN_USERNAME: savedUsername, OWNER_LOGIN_EMAIL: savedEmail })) {
       if (value === undefined) delete process.env[key]; else process.env[key] = value;
     }
+  }
+});
+
+test('Google sign-in retrieves the authenticated account when runtime claims omit freshness', async () => {
+  const claims = { id: 'owner-id', email: 'owner@example.com', roles: ['owner'] };
+  const latest = { ...claims, provider: 'google', lastSignInAt: new Date().toISOString() };
+  const load = async id => {
+    assert.equal(id, claims.id);
+    return latest;
+  };
+  assert.deepEqual(await loadIdentitySignIn(claims, load), latest);
+  assert.deepEqual(await loadIdentitySignIn(latest, async () => assert.fail('profile already includes sign-in time')), latest);
+  await assert.rejects(loadIdentitySignIn(claims, async () => ({ ...latest, id: 'different-user' })), { status: 403 });
+  await assert.rejects(loadIdentitySignIn(claims, async () => ({ ...latest, roles: [] })), { status: 403 });
+});
+
+test('hosted Identity restores the Google sign-in time from the trusted profile', async () => {
+  const previousFetch = globalThis.fetch;
+  const previousContext = globalThis.netlifyIdentityContext;
+  const identity = 'https://rs.example/.netlify/identity';
+  const id = '3c978ab3-64a5-4f70-bad2-31d66050f309';
+  const signedInAt = new Date().toISOString();
+  globalThis.netlifyIdentityContext = {
+    url: identity,
+    token: 'fixture-operator',
+    user: { sub: id, email: 'owner@example.com', app_metadata: { roles: ['owner'] } },
+  };
+  globalThis.fetch = async (url, options) => {
+    assert.equal(options.headers.Authorization, 'Bearer fixture-operator');
+    if (url === identity + '/user') return new Response(null, { status: 401 });
+    assert.equal(url, identity + '/admin/users/' + id);
+    return Response.json({
+      id, email: 'owner@example.com', last_sign_in_at: signedInAt,
+      app_metadata: { roles: ['owner'], provider: 'google' },
+    });
+  };
+  try {
+    const identityUser = await requireIdentityUser(new Request('https://rs.example/admin/'));
+    assert.equal(identityUser.lastSignInAt, undefined);
+    const current = await loadIdentitySignIn(identityUser);
+    assert.equal(current.lastSignInAt, signedInAt);
+    assert.equal(current.provider, 'google');
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousContext === undefined) delete globalThis.netlifyIdentityContext;
+    else globalThis.netlifyIdentityContext = previousContext;
   }
 });

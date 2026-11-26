@@ -1,4 +1,4 @@
-import { getUser } from '@netlify/identity';
+import { admin, getUser } from '@netlify/identity';
 import { isLocalPreview } from './store.mjs';
 import { permissionsFor } from './owner-access.mjs';
 import { checkWorkspaceSession } from './workspace-session.mjs';
@@ -9,6 +9,18 @@ export async function requireIdentityUser(request) {
   if (!user) throw Object.assign(new Error('Sign in to continue.'), { status: 401 });
   if (!permissionsFor(user).length) throw Object.assign(new Error('This account does not have workspace access.'), { status: 403 });
   return user;
+}
+
+export async function loadIdentitySignIn(user, getIdentityUser = admin.getUser) {
+  if (user.lastSignInAt) return user;
+
+  // The SDK's verified claims fallback contains roles, but no last sign-in time.
+  // Look up only the authenticated account. A token refresh does not count as a login.
+  const current = await getIdentityUser(user.id);
+  if (current?.id !== user.id || !permissionsFor(current).length) {
+    throw Object.assign(new Error('This account does not have workspace access.'), { status: 403 });
+  }
+  return current;
 }
 
 export async function requireWorkspaceUser(request) {

@@ -40,6 +40,13 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
       return Response.json({ data: settings, revision: 'revision-' + contentWrites });
     }
     if (action === 'list') { inboxReads++; return Response.json({ items: records }); }
+    if (action === 'review' && options?.method === 'POST') {
+      const { id, publication } = JSON.parse(options.body);
+      const review = records.find(record => record.id === id);
+      assert.equal(review.form_name, 'customer-review');
+      review.state = { publication };
+      return Response.json({ revision: publication });
+    }
     throw new Error('Unexpected request ' + url);
   };
   await import('../src/admin/index.js');
@@ -142,8 +149,9 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
   assert.equal(settings.headline, 'Draft only headline');
   assert.equal($('#content-publish').disabled, true);
   $('[data-owner-view="reviews"]').click();
-  const publish = [...document.querySelectorAll('.review-actions-menu button')].find(button => button.textContent === 'Publish');
-  assert.equal(publish.disabled, true);
+  const reviewActions = () => [...document.querySelectorAll('.review-actions-menu button')].map(button => button.textContent);
+  assert.deepEqual(reviewActions(), ['Mark as spam']);
+  assert.match($('.review-card-state').textContent, /Customer did not grant permission to publish/);
   $('.review-card-footer .quiet-button').click();
   assert.equal($('#review-preview-dialog').open, true);
   assert.match($('#review-preview-body').textContent, /<script>Private feedback<\/script>/);
@@ -156,5 +164,24 @@ test('admin sections hide fields, preview drafts, reveal invalid fields, and pre
   assert.equal(inboxReads, 2);
   assert.equal($('.notification-trigger').getAttribute('aria-label'), 'Notifications, 1 unread');
   assert.match($('.notification-item').textContent, /Later customer/);
+  const review = records.find(record => record.id === 'private-review');
+  review.data['publish-permission'] = 'yes';
+  review.state = { publication: 'Unpublished' };
+  $('#owner-reviews .owner-refresh').click();
+  await settle();
+  assert.deepEqual(reviewActions(), ['Publish', 'Mark as spam']);
+  const firstReviewAction = () => $('.review-actions-menu button');
+  firstReviewAction().click();
+  await settle();
+  assert.deepEqual(reviewActions(), ['Unpublish', 'Mark as spam']);
+  firstReviewAction().click();
+  await settle();
+  assert.deepEqual(reviewActions(), ['Publish', 'Mark as spam']);
+  document.querySelectorAll('.review-actions-menu button')[1].click();
+  await settle();
+  assert.deepEqual(reviewActions(), ['Restore review']);
+  firstReviewAction().click();
+  await settle();
+  assert.deepEqual(reviewActions(), ['Publish', 'Mark as spam']);
   dom.window.close();
 });

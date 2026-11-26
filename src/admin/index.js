@@ -303,13 +303,47 @@ function renderReviews() {
   filtered.forEach(item => {
     const card = node('article', undefined, 'workspace-panel review-admin-card'), person = node('div', undefined, 'review-card-person'), copy = node('div');
     copy.append(node('h3', item.data.first_name || 'Customer'), node('time', date(item.created_at))); person.append(node('span', initials(item.data.first_name), 'initials'), copy);
-    card.append(person, starRating(Number(item.data.rating)), node('blockquote', item.data.review), node('p', (item.state?.publication || 'Awaiting review') + ' · ' + (item.data['publish-permission'] === 'yes' ? 'Publication permitted' : 'Private feedback'), 'review-card-state'));
-    const footer = node('div', undefined, 'review-card-footer'), preview = node('button', undefined, 'quiet-button'); preview.type = 'button'; preview.append(icon('eye'), node('span', ' Preview')); preview.addEventListener('click', () => previewReview(item));
-    const menu = node('details', undefined, 'review-actions'), summary = node('summary', 'Actions '); summary.append(icon('chevron-down')); const choices = node('div', undefined, 'review-actions-menu');
-    for (const [label, publication] of [['Publish', 'Published'], ['Unpublish', 'Unpublished'], ['Mark as spam', 'Spam']]) {
-      const button = node('button', label); button.type = 'button'; button.disabled = publication === item.state?.publication || (publication === 'Published' && item.data['publish-permission'] !== 'yes');
-      button.addEventListener('click', () => run(button, async () => { await api('review', { id: item.id, revision: item.revision, publication }); await loadItems(); announce('Review ' + publication.toLowerCase() + '.'); })); choices.append(button);
-    } menu.append(summary, choices); footer.append(preview, menu); card.append(footer); container.append(card);
+    const publication = item.state?.publication;
+    const hasConsent = item.data['publish-permission'] === 'yes';
+    const visibility = hasConsent ? 'Publication permitted' : 'Private feedback · Customer did not grant permission to publish';
+    card.append(person, starRating(Number(item.data.rating)), node('blockquote', item.data.review),
+      node('p', (publication || 'Awaiting review') + ' · ' + visibility, 'review-card-state'));
+    const footer = node('div', undefined, 'review-card-footer');
+    const preview = node('button', undefined, 'quiet-button');
+    preview.type = 'button';
+    preview.append(icon('eye'), node('span', ' Preview'));
+    preview.addEventListener('click', () => previewReview(item));
+    const menu = node('details', undefined, 'review-actions');
+    const summary = node('summary', 'Actions ');
+    summary.append(icon('chevron-down'));
+    const choices = node('div', undefined, 'review-actions-menu');
+    const actions = [];
+    if (publication === 'Spam') {
+      actions.push(['Restore review', 'Unpublished', 'Review removed from spam.']);
+    } else {
+      if (publication === 'Published') actions.push(['Unpublish', 'Unpublished', 'Review unpublished.']);
+      else if (hasConsent) actions.push(['Publish', 'Published', 'Review published.']);
+      actions.push(['Mark as spam', 'Spam', 'Review marked as spam.']);
+    }
+    for (const [label, next, success] of actions) {
+      const button = node('button', label);
+      button.type = 'button';
+      button.addEventListener('click', () => run(button, async () => {
+        try {
+          await api('review', { id: item.id, revision: item.revision, publication: next });
+        } catch (error) {
+          if (error.status === 409) await loadItems();
+          throw error;
+        }
+        await loadItems();
+        announce(success);
+      }));
+      choices.append(button);
+    }
+    menu.append(summary, choices);
+    footer.append(preview, menu);
+    card.append(footer);
+    container.append(card);
   });
 }
 

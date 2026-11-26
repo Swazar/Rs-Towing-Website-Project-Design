@@ -1,6 +1,6 @@
 import { getUser, logout } from '@netlify/identity';
 import { validateProfile } from '../lib/profile.mjs';
-import { requireIdentityUser } from '../lib/workspace-user.mjs';
+import { loadIdentitySignIn, requireIdentityUser } from '../lib/workspace-user.mjs';
 import { checkWorkspaceSession, closeWorkspaceSession, openWorkspaceSession, workspaceCookie } from '../lib/workspace-session.mjs';
 import { resolveSettingsImages } from '../lib/media-records.mjs';
 import { withMediaDefaults } from '../../public/assets/site-media.js';
@@ -49,7 +49,8 @@ export default async function owner(request) {
     const user = await requireIdentityUser(request);
     if (action === 'session-start' && request.method === 'POST') {
       if (isLocalPreview(request)) return json({ signedIn: true });
-      return sessionResponse({ signedIn: true }, await openWorkspaceSession(request, user, { freshIdentity: true }));
+      const signedInUser = await loadIdentitySignIn(user);
+      return sessionResponse({ signedIn: true }, await openWorkspaceSession(request, signedInUser, { freshIdentity: true }));
     }
     const expiresAt = await checkWorkspaceSession(request, user, { touch: action === 'session-touch' && request.method === 'POST' });
     if (action === 'session-touch' && request.method === 'POST') return json({ expiresAt });
